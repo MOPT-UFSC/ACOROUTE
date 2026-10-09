@@ -1,10 +1,10 @@
 <p align="center">
   <img src="ACOROUTE_FIG.png"
-       alt="ACOROUTE — ant colony optimization for tube routing"
+       alt="ACOROUTE — ant colony optimization for pipe routing"
        width="900">
 </p>
 
-**Ant colony optimization of manufacturable tube routes for reduced vibration input power.**
+**Ant colony optimization of manufacturable pipe routes for reduced vibration input power.**
 
 This repository implements the research code associated with the manuscript:
 
