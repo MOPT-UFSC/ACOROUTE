@@ -33,25 +33,6 @@ The objective is non-additive and is available only after a complete geometric a
 | Match code names to paper symbols | [`docs/CODE_TO_PAPER.md`](docs/CODE_TO_PAPER.md) |
 | Understand and tune every ACO parameter | [`docs/ACO_PARAMETERS.md`](docs/ACO_PARAMETERS.md) |
 
-## Method overview
-
-```mermaid
-flowchart TD
-    A[Define domain, endpoints, tube, bands and constraints] --> B[Build lattice graph and geodesic distance fields]
-    B --> C[Construct complete routes with ACO, balanced detour budget and bidirectional ants]
-    C --> D[Fit endpoint-constrained smoothing B-spline with optional end-tangent clamp]
-    D --> E{Length, radius, containment, keep-out and self-clearance feasible?}
-    E -- no --> C
-    E -- yes --> F[Arc-length resampling and Timoshenko beam mesh]
-    F --> G[Eigenfrequency-guided frequency grid]
-    G --> H[Harmonic solution: direct banded solver or modal superposition]
-    H --> I[Band-integrated active input power]
-    I --> J[Update the bounded pheromone field tau]
-    J --> K{Stop?}
-    K -- no --> C
-    K -- yes --> L[Best route, spectra, reactions, convergence data and CAD export]
-```
-
 ## Requirements
 
 - Python 3.10 or newer
