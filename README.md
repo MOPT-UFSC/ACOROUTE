@@ -9,7 +9,7 @@
 This repository implements the research code associated with the manuscript:
 
 > **Ant colony optimization of small-bore pipe routes for reduced active input power**
-> Olavo M. Silva, Caio Wagner, Eduardo L. Cardoso, Miguel M. Neves, and Arcanjo Lenzi.
+> Olavo M. Silva, Eduardo L. Cardoso, Miguel M. Neves, and Arcanjo Lenzi.
 > Submitted to the *Journal of Sound and Vibration*.
 
 The method constructs routes on a three-dimensional lattice, converts each completed route into an endpoint-constrained smoothing B-spline, checks manufacturability (developed length, minimum bend radius, containment, keep-out, self-clearance), meshes the centreline with 3D Timoshenko beam elements, and minimizes the active input power integrated over one or more frequency bands.
@@ -241,7 +241,7 @@ Use the repository's [`CITATION.cff`](CITATION.cff) through GitHub's **Cite this
 
 ```bibtex
 @software{silva_acoroute_2026,
-  author  = {Silva, Olavo M. and Wagner, Caio and Cardoso, Eduardo L. and Neves, Miguel M. and Lenzi, Arcanjo},
+  author  = {Silva, Olavo M. and Cardoso, Eduardo L. and Neves, Miguel M. and Lenzi, Arcanjo},
   title   = {ACOROUTE: Ant colony optimization of manufacturable tube routes for reduced vibration input power},
   year    = {2026},
   version = {0.1.0}
