@@ -4,11 +4,11 @@
        width="900">
 </p>
 
-**Ant colony optimization of manufacturable pipe routes for reduced vibration input power.**
+**Ant colony optimization of small-bore pipe routes for reduced active input power.**
 
 This repository implements the research code associated with the manuscript:
 
-> **Ant colony optimization of manufacturable small-bore pipe routes for reduced transmission of vibratory power**
+> **Ant colony optimization of small-bore pipe routes for reduced active input power**
 > Olavo M. Silva, Caio Wagner, Eduardo L. Cardoso, Miguel M. Neves, and Arcanjo Lenzi.
 > Submitted to the *Journal of Sound and Vibration*.
 
