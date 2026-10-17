@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+
+# Run outputs (figures, logs, data, CAD exports)
+fig_*.png
+fig_*.pdf
+*_aco_log*.txt
+*.npz
+*.igs
+*.iges
+*.stp
+*.step

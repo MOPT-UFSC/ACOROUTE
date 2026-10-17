@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "ACOROUTE: Ant colony optimization of small-bore pipe routes for reduced active input power"
+version: 0.1.0
+date-released: 2026-10-09
+license: MIT
+repository-code: "https://github.com/MOPT-UFSC/ACOROUTE"
+authors:
+  - family-names: Silva
+    given-names: Olavo M.
+    orcid: "https://orcid.org/0000-0002-9939-6660"
+  - family-names: Cardoso
+    given-names: Eduardo L.
+  - family-names: Neves
+    given-names: Miguel M.
+  - family-names: Lenzi
+    given-names: Arcanjo
+preferred-citation:
+  type: article
+  title: "Ant colony optimization of small-bore pipe routes for reduced active input power"
+  journal: "Journal of Sound and Vibration"
+  year: 2026
+  notes: "Submitted; update with volume, pages and DOI after acceptance."
+  authors:
+    - family-names: Silva
+      given-names: Olavo M.
+    - family-names: Cardoso
+      given-names: Eduardo L.
+    - family-names: Neves
+      given-names: Miguel M.
+    - family-names: Lenzi
+      given-names: Arcanjo

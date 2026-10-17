@@ -1,0 +1,1099 @@
+diff --git a/CITATION.cff b/CITATION.cff
+index 72f7558..b4310fb 100644
+--- a/CITATION.cff
++++ b/CITATION.cff
+@@ -5,7 +5,7 @@ title: "ACOROUTE: Ant colony optimization of small-bore pipe routes for reduced
+ version: 0.1.0
+ date-released: 2026-10-09
+ license: MIT
+-repository-code: "https://github.com/olavosilva/ACOROUTE"
++repository-code: "https://github.com/MOPT-UFSC/ACOROUTE"
+ authors:
+   - family-names: Silva
+     given-names: Olavo M.
+diff --git a/README.md b/README.md
+index 46b9c0d..b91e128 100644
+--- a/README.md
++++ b/README.md
+@@ -12,15 +12,15 @@ This repository implements the research code associated with the manuscript:
+ > Olavo M. Silva, Eduardo L. Cardoso, Miguel M. Neves, and Arcanjo Lenzi.
+ > Submitted to the *Journal of Sound and Vibration*.
+ 
+-The method constructs routes on a three-dimensional lattice, converts each completed route into an endpoint-constrained smoothing B-spline, checks manufacturability (developed length, minimum bend radius, containment, keep-out, self-clearance), meshes the centreline with 3D Timoshenko beam elements, and minimizes the active input power integrated over one or more frequency bands.
++The method constructs routes on a three-dimensional lattice, converts each completed route into a smoothing B-spline with pinned endpoints and end tangents, checks the admissibility conditions (developed length, minimum bend radius, containment, keep-out and, when active, self-clearance), meshes the centreline with 3D Timoshenko beam elements, and minimizes the active input power integrated over one or more frequency bands. The three filters that act during the construction (turn angle, length lower bound, keep-out) are described in the paper as admissibility filters; the complete checks are applied to the fitted spline.
+ 
+-The reported ACO configuration is a MAX–MIN ant system with a single bounded pheromone field on the undirected lattice edges, combined with mechanisms tailored to the geometry of the problem:
++The optimizer combines the constructive principles of Ant System, the exploration schedule of Ant Colony System and the iteration-best reinforcement, bounded pheromone trail and stagnation restart of MAX–MIN Ant System, on a single pheromone field over the undirected lattice edges, with mechanisms tailored to the geometry of the problem:
+ 
+ - **balanced detour budget** (`slack_balance`, paper symbol ξ): the slack between the straight A–B distance and the length budget is rationed along the route via the geodesic distance field, so ants keep the same turning capability near B as near A;
+ - **bidirectional construction** (`bidirectional`): half of each iteration's ants build their route from B toward A; completed routes are canonicalized to the A→B orientation before evaluation, so the excitation/support roles and the objective are unchanged;
+-- **iteration-best deposit with best-so-far elitism**, exploitation annealing (q0 ramp), and a concentration-gated stagnation restart.
++- **iteration-best deposit with best-so-far elitism**, a linear schedule of the exploitation probability over an exploration window, optional warm-start corridors, and a stagnation restart that fires only after the colony has concentrated.
+ 
+-The objective is non-additive and is available only after a complete geometric and finite-element evaluation of the route; inside the loop it is computed on an eigenfrequency-guided frequency grid with either a direct banded solver or modal superposition with a residual-flexibility (static) correction.
++The objective is non-additive and is available only after a complete geometric and finite-element evaluation of the route. Inside the loop it is computed on an eigenfrequency-guided frequency grid, with modal superposition and residual flexibility in the reported runs, or with the direct banded solver used as reference.
+ 
+ ## Start here
+ 
+@@ -35,7 +35,7 @@ The objective is non-additive and is available only after a complete geometric a
+ 
+ ## Requirements
+ 
+-- Python 3.10 or newer
++- Python 3.10 or newer (the paper's results were produced with Python 3.12)
+ - NumPy
+ - SciPy
+ - Matplotlib
+@@ -92,7 +92,7 @@ EXIT_DIR_A, ARRIVE_DIR_B,
+ EXIT_CONE_DEG, ARRIVE_CONE_DEG,
+ TANGENT_CLAMP                       # prescribed exit/arrival directions
+ LMAX_FACTOR or LMAX_ABS             # developed-length budget
+-OUTER_RADIUS, THICKNESS             # tube cross section
++OUTER_RADIUS, THICKNESS             # pipe cross section
+ E, nu, rho                          # material
+ BANDS, BAND_WEIGHTS, RAY            # target bands and damping
+ EXCITATION, PRESCRIBED_DISP,
+@@ -106,6 +106,23 @@ ACO_OVERRIDES                       # optimizer tuning
+ 
+ See [`docs/CODE_TO_PAPER.md`](docs/CODE_TO_PAPER.md) for the corresponding paper notation and [`docs/ACO_PARAMETERS.md`](docs/ACO_PARAMETERS.md) for the optimizer settings.
+ 
++## Numerical examples of the paper
++
++Each example of the manuscript is one of the three drivers with the settings below. Every case uses the 26-connected lattice, `R_MIN = 0.008`, `SMOOTH = 1e-4`, `HARMONIC_SOLVER = "modal"` with `MODAL_FCUT = 3.0`, `SEEDS = [3, 5, 7, 11, 13]` and `ACO_OVERRIDES = {"bidirectional": 0.5, "slack_balance": 0.5}` plus `"n_eval_workers": "auto"`. The ACO budgets follow from the lattice through `aco.auto_params`.
++
++| Paper case | Driver | `NODES` | `BANDS` [Hz] | Keep-out | `LMAX_FACTOR` | Other |
++|---|---|---|---|---|---|---|
++| Representative, free cube | `run_spline.py` | (15, 15, 15) | [(500, 1500)] | `EXCLUDE_CENTER = False` | 1.7 | as shipped |
++| Free cube, low band | `run_spline.py` | (15, 15, 15) | [(1000, 3000)] | `False` | 1.7 | |
++| Free cube, mid band | `run_spline.py` | (20, 20, 20) | [(5000, 7000)] | `False` | 1.7 | |
++| Free cube, high band | `run_spline.py` | (23, 23, 23) | [(6000, 10000)] | `False` | 1.7 | |
++| Free cube, two bands | `run_spline.py` | (21, 21, 21) | [(1000, 2000), (6000, 8000)] | `False` | 1.7 | `BAND_WEIGHTS = (5.0, 1.0)` |
++| Central box | `run_spline.py` | (15, 15, 15) | [(1000, 3000)] | `EXCLUDE_CENTER = 0.5` | 1.7 | |
++| Staircase | `run_staircase.py` | (23, 12, 23) | [(6000, 10000)] | two baffles, as shipped | 3.0 | `SELF_CLEARANCE = OD`, one warm-start corridor |
++| Ball | `run_sphere.py` | (21, 21, 21), masked | [(4000, 8000)] | `EXCLUDE_CENTER = 0.4` | 4 | end cones at the ball surface, as shipped |
++
++The drivers are shipped with the representative, staircase and ball settings. The box-domain variants are obtained by editing the entries listed above in `run_spline.py`; the same list is repeated in a comment at the top of that file.
++
+ ## Prescribed complex motion
+ 
+ `PRESCRIBED_DISP` accepts real or complex harmonic amplitudes. With the convention
+@@ -147,6 +164,7 @@ Generated figures, logs, caches, data files and CAD exports are ignored by the s
+ | Construction-rule validation (turn-angle profiles, geodesic field, bidirectional) | `validate_construction.py` |
+ | Search-space size and monotone-route count | `count_monotone.py` |
+ | Random-search benchmark and search-level ablations at equal FEM budget | `baseline_search.py` |
++| Cost of one iteration by stage (construction, geometry checks, finite elements) | `time_iteration.py` |
+ | Smoothing-tolerance calibration | `calibrate_smoothing.py` |
+ | Balanced-budget figure | `make_fig_balanced_budget.py` |
+ | Paper and schematic figures | `make_paper_figures.py`, `make_schematic_figures.py`, `cost_figure.py`, `reaction_figure.py` |
+@@ -186,6 +204,7 @@ validate_self_clearance.py   self-clearance test suite
+ validate_slack_balance.py    balanced detour-budget checks
+ validate_fixes.py            broader regression checks
+ verify_v6_winner.py          optional post-processing verification
++time_iteration.py            cost of one ACO iteration by stage
+ docs/                        article/code cross-reference and user guides
+ ```
+ 
+@@ -224,7 +243,7 @@ $env:OPENBLAS_NUM_THREADS="1"
+ 
+ This is research code, not a certified pipe-design tool. In particular:
+ 
+-- the tube is represented by a beam centreline, not a shell model;
++- the pipe is represented by a beam centreline, not a shell model;
+ - the current objective is structural active input power;
+ - internal fluid loading and fluid-structure coupling are not included in this repository;
+ - geometric feasibility is checked numerically on sampled splines;
+@@ -242,9 +261,10 @@ Use the repository's [`CITATION.cff`](CITATION.cff) through GitHub's **Cite this
+ ```bibtex
+ @software{silva_acoroute_2026,
+   author  = {Silva, Olavo M. and Cardoso, Eduardo L. and Neves, Miguel M. and Lenzi, Arcanjo},
+-  title   = {ACOROUTE: Ant colony optimization of manufacturable tube routes for reduced vibration input power},
++  title   = {ACOROUTE: Ant colony optimization of small-bore pipe routes for reduced active input power},
+   year    = {2026},
+-  version = {0.1.0}
++  version = {0.1.0},
++  url     = {https://github.com/MOPT-UFSC/ACOROUTE}
+ }
+ ```
+ 
+diff --git a/aco.py b/aco.py
+index 982c60f..2fa548d 100644
+--- a/aco.py
++++ b/aco.py
+@@ -363,7 +363,7 @@ def default_params():
+     return {
+         "alpha": 1.0,            # exponent of the pheromone field tau in the transition rule
+         "q0": 0.7,               # exploitation probability (slide value)
+-        "q0_iters": None,        # iterations over which q0_anneal runs (None: max_iter). Fixing it
++        "q0_iters": None,        # iterations of the q0 schedule, the exploration window T_q (None: max_iter). Fixing it
+                                  # decouples the exploration schedule from the iteration budget, so
+                                  # a longer max_iter does not stretch the exploratory phase.
+         "improve_tol": 1e-2,     # relative gain on the incumbent that counts as progress
+@@ -386,12 +386,12 @@ def default_params():
+         "tau_bounds": None,      # (tau_min, tau_max) Max-Min Ant System clamping
+         "stagnation_reset": 0,   # re-init pheromone after N stale iters (0 off)
+         "kick_concentration": 3.0,
+-        "stagnation_smooth": 1.0,# kick intensity on stagnation: 1.0 = full reset to tau_max, <1 = gentle smoothing
++        "stagnation_smooth": 1.0,# restart intensity on stagnation: 1.0 = full reset to tau_max, <1 = gentle smoothing
+         "global_evaporation": True,  # evaporate on every admissible edge, not only on the
+                                      # edges that happen to carry a deposit already
+-        "q0_rewind_on_kick": False,  # restart the q0 anneal after a stagnation kick, so the
++        "q0_rewind_on_kick": False,  # rewind the q0 schedule after a stagnation restart, so the
+                                      # re-diversified pheromone is explored at low q0 instead of
+-                                     # exploited greedily at the annealed (high) q0. Off by
++                                     # exploited greedily at the final (high) q0. Off by
+                                      # default to leave existing runs bit-identical.
+         "bidirectional": 0.0,    # fraction of each iteration's ants that construct their
+                                  # route from B toward A (0 = all from A, 0.5 = half). A
+@@ -423,12 +423,12 @@ def default_params():
+ def auto_params(grid, overrides=None, verbose=False):
+     """Return ACO parameters scaled to the size of the lattice.
+ 
+-    The search budget is tied to the exploration schedule. The q0 ramp lasts
++    The search budget is tied to the exploration schedule. The q0 schedule lasts
+         T_q = clamp(5 h, 40, 120)   iterations,   h = mean(nx, ny, nz) - 1,
+     where h is the number of hops in a direct route and therefore the number of
+     decisions an ant makes per route. The stagnation window, the patience and
+-    the iteration cap are derived from T_q so that the ramp always ends before
+-    the run can stop, every restart has half a ramp to re-converge before the
++    the iteration cap are derived from T_q so that the exploration window always ends before
++    the run can stop, every restart has half a window to re-converge before the
+     patience can trigger, and the cap is normally not reached. The dynamics
+     parameters (alpha, rho, q0 range and Max-Min bounds) are size
+     independent. The coefficient 5 reproduces T_q = 60 on the 13x13x13 lattice,
+@@ -441,7 +441,7 @@ def auto_params(grid, overrides=None, verbose=False):
+     params = {
+         "n_ants":           clamp(2.8 * h, 12, 60),
+         "q0_iters":         q0_iters,
+-        "patience":         q0_iters,            # the ramp ends before the run can stop
++        "patience":         q0_iters,            # the exploration window ends before the run can stop
+         "stagnation_reset": q0_iters // 2,       # patience = 2 x stall window
+         "max_iter":         4 * q0_iters,        # safety cap, normally not reached
+         "stagnation_smooth": 1.0,
+@@ -463,7 +463,7 @@ def auto_params(grid, overrides=None, verbose=False):
+ 
+ 
+ def _q0_at(p, it):
+-    """Annealed exploitation probability at iteration `it`.
++    """Scheduled exploitation probability at iteration `it`.
+ 
+     q0 rises linearly from q0_anneal[0] to q0_anneal[1] over `q0_iters` iterations
+     (max_iter when q0_iters is None) and stays at q0_anneal[1] afterwards, so the
+@@ -527,7 +527,7 @@ def optimize(grid, adj, start_id, target_id, Lmax, objective_fn,
+     best_hist, mean_hist, feasible_hist = [], [], []
+     iter_best_hist = []   # lowest objective among the feasible ants of each iteration
+     iter_log = []         # full per-iteration diagnostic breakdown (also written to log_path)
+-    reset_iters = []      # iterations at which a stagnation kick re-diversified the colony
++    reset_iters = []      # iterations at which a stagnation restart re-diversified the colony
+     initial_best_from_seed = False   # True when the warm-start seed sets the initial best
+     fem_hist = []   # cumulative full-pipe FEM evaluations after each iteration
+     snapshots = []
+@@ -748,12 +748,12 @@ def optimize(grid, adj, start_id, target_id, Lmax, objective_fn,
+         deposit_elitist(tau, best, p)
+         _clamp(tau, p.get("tau_bounds"))
+ 
+-        # stagnation-triggered pheromone reset (MMAS): pull every trail toward tau_max.
++        # stagnation restart (MAX-MIN Ant System): pull every trail toward tau_max.
+         # Stagnation means the population has concentrated around an incumbent that no
+         # longer improves, so four conditions are required: (i) no significant gain for
+         # stagnation_reset iterations, (ii) at least stagnation_reset iterations since
+-        # the last kick or the start, (iii) the exploration schedule has ended (during
+-        # the q0 ramp the colony explores by design), and (iv) the feasible population
++        # the last restart or the start, (iii) the exploration schedule has ended (during
++        # the exploration window the colony explores by design), and (iv) the feasible population
+         # is concentrated: the median objective of the iteration lies within
+         # kick_concentration x the incumbent. Without (iv) a lucky early incumbent
+         # would trigger a reset while the population is still descending toward it
+@@ -776,7 +776,7 @@ def optimize(grid, adj, start_id, target_id, Lmax, objective_fn,
+                 last_kick = it + 1
+             if verbose:
+                 how = "reset" if delta >= 1.0 else f"smoothing (delta={delta:.2f})"
+-                print(f"  iter {it:3d} | stagnation kick #{n_stagnation}: {how} "
++                print(f"  iter {it:3d} | stagnation restart #{n_stagnation}: {how} "
+                       f"after {no_improve} stale iters")
+ 
+         if p["store_paths_every"] and (it % p["store_paths_every"] == 0):
+diff --git a/baseline_routes.py b/baseline_routes.py
+index 527a775..175430b 100644
+--- a/baseline_routes.py
++++ b/baseline_routes.py
+@@ -257,7 +257,7 @@ def serpentine_gap_baseline(A, B, boxes, gmin, gmax, Lmax, R_min,
+                       % (L * 1e3, 100 * L / Lmax, R * 1e3, viol * 1e3))
+             return pts, info
+     if verbose:
+-        print("  serpentine_gap_baseline: no feasible template found")
++        print("  serpentine_gap_baseline: no feasible waypoint set found")
+     return None, {"length": None}
+ 
+ 
+diff --git a/baseline_search.py b/baseline_search.py
+index 45ecb5c..fd13408 100644
+--- a/baseline_search.py
++++ b/baseline_search.py
+@@ -339,7 +339,7 @@ def main():
+                         alpha=0.85, label=("%s control" % c) if first else None)
+                 first = False
+     ax.set_yscale("log"); ax.set_xlabel("finite-element evaluations"); ax.set_ylabel(r"best-so-far objective  [W$\cdot$Hz]")
+-    ax.set_title("Search-level controls at equal FEM budget: %s" % case)
++    # no in-figure title: the manuscript caption describes the panel
+     ax.grid(True, which="both", ls=":", alpha=0.5); ax.legend(frameon=False)
+     fig.tight_layout(); fig.savefig("baseline_search_%s.png" % case, dpi=150); fig.savefig("baseline_search_%s.pdf" % case)
+     print("\nSaved: baseline_search_%s.csv, baseline_search_%s.png/.pdf" % (case, case))
+diff --git a/docs/ACO_PARAMETERS.md b/docs/ACO_PARAMETERS.md
+index b53cd0a..3397fe0 100644
+--- a/docs/ACO_PARAMETERS.md
++++ b/docs/ACO_PARAMETERS.md
+@@ -10,18 +10,24 @@ direct use of the library.
+ params = aco.auto_params(grid, overrides=ACO_OVERRIDES)
+ ```
+ 
++Some keys keep historical names (`stagnation_reset`, `kick_concentration`,
++`q0_rewind_on_kick`). They are retained so that existing configurations and
++logs stay valid. In the paper the corresponding mechanism is called the
++*stagnation restart*, and the names used there are given in each table.
++
+ ## Budget scaling (auto_params)
+ 
+-With `h = mean(nx, ny, nz) − 1` (the number of hops in a direct route, i.e.
+-decisions per ant per route) and `rclip(v, lo, hi) = round then clamp`:
++With `h = mean(nx, ny, nz) − 1` (the mean number of hops per axis, written
++$h_g$ in the paper) and `rclip(v, lo, hi) = round to the nearest integer, then
++clamp to [lo, hi]`:
+ 
+-| Entry | Value | Role |
+-| --- | --- | --- |
+-| `q0_iters` | `rclip(5h, 40, 120)` | exploration window $T_q$: iterations over which `q0_anneal` ramps |
+-| `n_ants` | `rclip(2.8h, 12, 60)` | ants per iteration |
+-| `patience` | `q0_iters` | early stop after this many iterations without progress — the ramp always ends before the run can stop |
+-| `stagnation_reset` | `q0_iters // 2` | stale iterations that trigger a pheromone kick; every restart has half a ramp to re-converge before the patience can trigger |
+-| `max_iter` | `4 * q0_iters` | safety cap, normally not reached |
++| Entry | Value | Paper | Role |
++| --- | --- | --- | --- |
++| `q0_iters` | `rclip(5h, 40, 120)` | $T_q$ | exploration window: iterations over which the exploitation probability follows its linear schedule |
++| `n_ants` | `rclip(2.8h, 12, 60)` | $n_{\mathrm{ant}}$ | ants per iteration |
++| `patience` | `q0_iters` | $n_{\mathrm{patience}}$ | stop after this many iterations without progress. The exploration window always ends before the run can stop |
++| `stagnation_reset` | `q0_iters // 2` | $n_{\mathrm{stall}}$ | stale iterations before a stagnation restart is considered. Every restart has half a window to re-converge before the patience can stop the run |
++| `max_iter` | `4 * q0_iters` | $T$ | iteration cap, normally not reached |
+ 
+ The dynamics parameters below are size-independent.
+ 
+@@ -29,44 +35,60 @@ The dynamics parameters below are size-independent.
+ 
+ | Entry | Default (auto) | Role |
+ | --- | --- | --- |
+-| `alpha` | 1.0 | exponent of the pheromone field τ in the transition rule |
+-| `q0_anneal` | (0.2, 0.9) | exploitation probability ramped linearly from start to end over `q0_iters`; fixing `q0_iters` decouples the exploration schedule from `max_iter` |
++| `alpha` | 1.0 | exponent $\alpha$ of the pheromone field τ in the transition rule |
++| `q0_anneal` | (0.2, 0.9) | exploitation probability $(q_0^{\mathrm{s}}, q_0^{\mathrm{e}})$, varied linearly from start to end over `q0_iters` and held at the end value afterwards. Fixing `q0_iters` decouples the exploration schedule from `max_iter` |
+ | `q0` | 0.7 | fixed exploitation probability, used only when `q0_anneal` is unset |
+-| `q0_rewind_on_kick` | False | restart the q0 ramp after a stagnation kick so the re-diversified pheromone is explored at low q0 |
++| `q0_rewind_on_kick` | False | restart the $q_0$ schedule after a stagnation restart so that the re-diversified pheromone is explored at low $q_0$. Not used in the reported runs |
+ 
+ ## Construction constraints
+ 
+ | Entry | Default | Role |
+ | --- | --- | --- |
+-| `max_turn_deg` | None | turn-angle limit per node (cheap curvature pre-filter); the drivers derive it from the lattice pitch and `R_min` via `geometry.max_turn_from_pitch` |
++| `max_turn_deg` | None | turn-angle limit $\theta_{\max}$ per node (curvature pre-filter). The drivers derive it from the lattice pitch and `R_min` via `geometry.max_turn_from_pitch` |
+ | `start_dir`, `start_max_turn_deg` | None | prescribed exit direction at the start node and its cone half-angle (None = `max_turn_deg`, else 90°) |
+ | `end_dir`, `end_max_turn_deg` | None | prescribed arrival (travel) direction at the target node and its cone |
+-| `R_min` | 0.0 | hard minimum bend radius checked on the as-built spline (0 = off) |
+-| `slack_balance` | 0.0 (0.5 reported) | ξ ∈ [0,1]: ration the detour budget `Lmax − d(A,B)` proportionally along the route, using the geodesic distance field, so ants keep the same turning capability near B as near A; 0 = classic first-come-first-served bound (bit-identical to the legacy rule) |
+-| `bidirectional` | 0.0 (0.5 reported) | fraction of each iteration's ants constructed from B toward A. Completed routes are canonicalized to the A→B orientation before the geometry checks, the objective and the cache, so the excitation/support roles and J are unchanged; pheromone lives on undirected edges, so both populations reinforce one field. Exit/arrival cones are mapped automatically for the reversed construction |
++| `R_min` | 0.0 | hard minimum bend radius $R_{\min}$ checked on the as-built spline (0 = off) |
++| `max_ops` | `50 * len(grid["coords"])` | construction-operation budget per ant (moves plus backtracks). An ant that exhausts it fails without a route |
++| `slack_balance` | 0.0 (0.5 reported) | balanced detour budget $\xi \in [0,1]$: the slack `Lmax − d(A,B)` is rationed along the route in proportion to the geodesic distance already covered, so ants keep the same turning capability near $B$ as near $A$. 0 = classic first-come-first-served bound |
++| `bidirectional` | 0.0 (0.5 reported) | fraction of each iteration's ants constructed from $B$ toward $A$ ($n_{\mathrm{rev}}=\operatorname{round}(n_{\mathrm{ant}}/2)$ when 0.5). Completed routes are canonicalized to the $A\to B$ orientation before the geometry checks, the objective and the cache, so the excitation/support roles and $J$ are unchanged. Pheromone lives on undirected edges, so both populations reinforce one field. Exit/arrival cones are mapped automatically for the reversed construction |
++
++Warm-start corridors are passed to `aco.optimize` through the `seed_paths`
++argument (one or more lattice routes, built in `run_staircase.py` with
++`grid.diverse_seed_paths`). The pheromone of their edges is raised to
++`min(6 * tau0, tau_bounds[1])` before the first iteration. The reported runs
++use one corridor in the staircase example and none elsewhere.
+ 
+ ## Pheromone update
+ 
+ | Entry | Default (auto) | Role |
+ | --- | --- | --- |
+-| `rho` | 0.15 | evaporation rate |
+-| `tau0` | 1.0 | initial pheromone level |
+-| `tau_bounds` | (0.05, 8.0) | MAX–MIN Ant System clamping (τ_min, τ_max) |
+-| `Q_tau` | 1.0 | deposit scale (constant: J only ranks the routes) |
++| `rho` | 0.15 | evaporation rate $\rho$ |
++| `tau0` | 1.0 | initial pheromone level $\tau_0$ |
++| `tau_bounds` | (0.05, 8.0) | MAX–MIN Ant System clamping $(\tau_{\min}, \tau_{\max})$ |
++| `Q_tau` | 1.0 | deposit scale $Q_\tau$ (constant: $J$ only ranks the routes) |
+ | `deposit_mode` | `"iteration_best"` | which ants deposit: `"all"`, `"iteration_best"` or `"best_so_far"` |
+-| `elitist_weight` | 1.0 | best-so-far reinforcement added each iteration (0 disables) |
++| `elitist_weight` | 1.0 | weight $w_e$ of the best-so-far reinforcement added each iteration (0 disables) |
+ | `global_evaporation` | True | evaporate on every admissible edge, not only on edges that already carry a deposit |
+ 
+ ## Stagnation restart and stopping
+ 
+-| Entry | Default (auto) | Role |
+-| --- | --- | --- |
+-| `improve_tol` | 1e-2 | relative gain on the incumbent that counts as progress for the restart and the patience stop (ε_J) |
+-| `stagnation_reset` | `q0_iters // 2` | stale iterations before a kick is considered |
+-| `kick_concentration` | 3.0 | concentration gate κ_c: the kick fires only when the iteration's median objective is below κ_c × best, i.e. the colony has actually concentrated |
+-| `stagnation_smooth` | 1.0 | kick intensity: 1.0 = full reset of τ to τ_max, < 1 = gentle pull toward τ_max |
+-| `patience` | `q0_iters` | stop after this many iterations without progress |
+-| `max_iter` | `4 * q0_iters` | iteration cap |
++A restart is triggered when four conditions hold at the end of an iteration:
++(i) the incumbent has not improved by more than `improve_tol` for
++`stagnation_reset` iterations; (ii) at least `stagnation_reset` iterations
++have elapsed since the previous restart or since the start; (iii) the
++exploration window has ended (`it >= q0_iters`); (iv) the median objective of
++the feasible routes of the iteration is below `kick_concentration` times the
++incumbent, so the colony has concentrated. The restart resets τ toward
++$\tau_{\max}$ on every admissible edge; the incumbent is kept.
++
++| Entry | Default (auto) | Paper | Role |
++| --- | --- | --- | --- |
++| `improve_tol` | 1e-2 | $\varepsilon_J$ | relative gain on the incumbent that counts as progress for the restart and for the patience stop |
++| `stagnation_reset` | `q0_iters // 2` | $n_{\mathrm{stall}}$ | stale iterations before a restart is considered |
++| `kick_concentration` | 3.0 | $\beta_c$ | concentration condition: the restart fires only when the iteration's median objective is below $\beta_c \times$ best |
++| `stagnation_smooth` | 1.0 | — | restart intensity: 1.0 = full reset of τ to $\tau_{\max}$, < 1 = partial pull toward $\tau_{\max}$ |
++| `patience` | `q0_iters` | $n_{\mathrm{patience}}$ | stop after this many iterations without progress |
++| `max_iter` | `4 * q0_iters` | $T$ | iteration cap |
+ 
+ ## Execution
+ 
+@@ -84,10 +106,10 @@ seeds concurrently. Prefer seed-level parallelism when several seeds run, and
+ ## Tuning notes
+ 
+ - **Premature stagnation of the objective**: lower `stagnation_reset` (react
+-  sooner) or `stagnation_smooth` (gentler kicks); lowering the start of
++  sooner) or `stagnation_smooth` (partial restarts). Lowering the start of
+   `q0_anneal` or raising `tau_bounds[0]` also fights early convergence.
+ - **Route shape**: `slack_balance` and `bidirectional` control where along the
+-  route the ants can spend their detour slack; with `bidirectional` consider a
++  route the ants can spend their detour slack. With `bidirectional` consider a
+   larger `n_ants` (e.g. 2× the auto value) to keep the per-direction
+   population size.
+ - Any entry can be pinned per case through the driver's `ACO_OVERRIDES`.
+diff --git a/docs/CODE_TO_PAPER.md b/docs/CODE_TO_PAPER.md
+index 52291da..bfcf24b 100644
+--- a/docs/CODE_TO_PAPER.md
++++ b/docs/CODE_TO_PAPER.md
+@@ -1,56 +1,81 @@
+ # Code ↔ paper cross-reference
+ 
+-Mapping between the symbols of the manuscript and the names used in the code.
+-"Default / reported" is the value used in the numerical examples of the paper;
+-the driver scripts (`run_spline.py`, `run_staircase.py`, `run_sphere.py`) pass
+-case-specific choices through their configuration blocks and `ACO_OVERRIDES`.
++Mapping between the symbols of the manuscript *Ant colony optimization of
++small-bore pipe routes for reduced active input power* and the names used in
++the code. "Reported" is the value used in the numerical examples of the paper.
++The driver scripts (`run_spline.py`, `run_staircase.py`, `run_sphere.py`) pass
++case-specific choices through their configuration blocks and `ACO_OVERRIDES`;
++the case-by-case settings are listed in the README.
++
++Some dictionary keys keep historical names (for example `kick_concentration`
++and `stagnation_reset`). They are retained so that existing configurations and
++logs stay valid; the paper vocabulary for each one is given below.
+ 
+ ## Problem definition and constraints
+ 
+-| Paper | Code | Default / reported |
++| Paper | Code | Reported |
+ | --- | --- | --- |
+-| $J(\gamma)$ band-integrated active input power | `fem_beam3d.band_integrated_power` via the driver's `geom_fn` | bands per case |
+-| target bands and weights | `BANDS`, `BAND_WEIGHTS` | per case |
+-| Rayleigh damping $(a_M, a_K)$ | `RAY` | (0, 2e-7) |
+-| prescribed displacement phasors at $A$ | `PRESCRIBED_DISP`, `PRESCRIBED_MASK` | (1e-6, 1e-6, 1e-6), all prescribed |
+-| $L_{\max}=\chi_L L_{AB}$ developed-length budget | `LMAX_FACTOR` (or `LMAX_ABS`) → `Lmax` | 1.7 (3.0 staircase, 4 sphere) |
++| $J(\gamma)$ band-integrated active input power, in W·Hz | `fem_beam3d.band_integrated_power` via the driver's `objective_spline` | per case |
++| target bands and weights $w_k$ | `BANDS`, `BAND_WEIGHTS` | per case; (5, 1) in the two-band case |
++| stiffness-proportional damping $a_K$ (Rayleigh pair $(a_M, a_K)$) | `RAY` | (0, 2e-7) |
++| prescribed displacement phasors at $A$ | `PRESCRIBED_DISP`, `PRESCRIBED_MASK` | (1e-6, 1e-6, 1e-6) m, all three translations prescribed, rotations blocked |
++| pipe section: outer radius, wall thickness | `OUTER_RADIUS`, `THICKNESS` | 1.575 mm, 0.5 mm |
++| material $E$, $\nu$, $\rho$ | `E`, `nu`, `rho` | 210 GPa, 0.3, 7850 kg/m³ |
++| $L_{\max}=\mu_L L_{AB}$ developed-length budget | `LMAX_FACTOR` (or `LMAX_ABS`) → `Lmax` | $\mu_L$ = 1.7 (box cases), 3 (staircase), 4 (ball) |
+ | $R_{\min}$ minimum bend radius | `R_MIN`, `params["R_min"]` | 8 mm |
+-| $\theta_{\max}$ turn-angle pre-filter | `MAX_TURN`, `params["max_turn_deg"]` | `geo.max_turn_from_pitch(h, R_MIN)` |
+-| exit / arrival direction cones at $A$ / $B$ | `EXIT_DIR_A`, `ARRIVE_DIR_B`, `EXIT_CONE_DEG`, `ARRIVE_CONE_DEG` (`params["start_dir"]`, `["end_dir"]`, `["start_max_turn_deg"]`, `["end_max_turn_deg"]`) | per case |
+-| spline-level end-tangent clamp | `TANGENT_CLAMP` → `geometry.END_TANGENTS` / `fit_spline(..., end_tangents=...)` | on where cones are prescribed |
++| $\theta_{\max}$ turn-angle pre-filter (Eq. for the S-jog) | `MAX_TURN`, `params["max_turn_deg"]` | `geo.max_turn_from_pitch(h_lat, R_MIN)` |
++| $h_{\mathrm{lat}}$ lattice pitch | `BOX_SIZE`, `NODES` → `grid["coords"]` | per case |
++| exit / arrival direction cones at $A$ / $B$ | `EXIT_DIR_A`, `ARRIVE_DIR_B`, `EXIT_CONE_DEG`, `ARRIVE_CONE_DEG` (`params["start_dir"]`, `["end_dir"]`, `["start_max_turn_deg"]`, `["end_max_turn_deg"]`) | vertical exit at $A$ and vertical arrival at $B$ in every case, half-angle 45° |
++| spline-level end-tangent pinning | `TANGENT_CLAMP` → `geometry.END_TANGENTS` / `fit_spline(..., end_tangents=...)` | on where cones are prescribed |
+ | $\delta_\Omega$ containment margin | `DOMAIN_TOL` | half the smallest lattice pitch |
+-| keep-out region | `EXCLUDE_CENTER`, `ENFORCE_KEEPOUT` | per case |
+-| self-clearance bound | `SELF_CLEARANCE` | `None` (measured and reported, not enforced) |
++| keep-out region | `EXCLUDE_CENTER`, `ENFORCE_KEEPOUT` (box and ball); baffle boxes and the segment filter in `run_staircase.py` | per case |
++| self-clearance bound | `SELF_CLEARANCE` | `OD` (enforced) in the staircase; `None` elsewhere (measured and reported, not enforced) |
++| construction-operation budget per ant (50 × retained nodes) | `params["max_ops"]` | default from `len(grid["coords"])` |
+ 
+ ## Spline fit and finite elements
+ 
+-| Paper | Code | Default / reported |
++| Paper | Code | Reported |
+ | --- | --- | --- |
+-| $s_{\mathrm{fit}}$ absolute smoothing bound | `SMOOTH` | $10^{-4}$ (case value in each driver) |
+-| $\varepsilon_{\mathrm{fit}}$ per-waypoint alternative ($s=N_{\mathrm{wp}}\varepsilon^2$) | `SMOOTH_RMS` → `geometry.DEFAULT_SMOOTH_RMS` | `None` (off; reported configuration) |
+-| beam element size (in-loop / reported) | `ELEM` / `ELEM_REPORT` | 5 mm / mesh-convergence pick |
+-| in-loop harmonic solver | `HARMONIC_SOLVER` | `"modal"` (`"direct"` = reference banded solver) |
+-| modal cut-off (multiple of the band's $f_{\mathrm{hi}}$) | `MODAL_FCUT` | 3.0 (`None` = complete basis, exact) |
++| $s_{\mathrm{fit}}$ absolute smoothing bound | `SMOOTH` | $10^{-4}$ m² |
++| $\varepsilon_{\mathrm{fit}}$ per-waypoint alternative ($s=N_{\mathrm{wp}}\varepsilon_{\mathrm{fit}}^2$) | `SMOOTH_RMS` → `geometry.DEFAULT_SMOOTH_RMS` | `None` (off) |
++| element length $L_e$ inside the loop | `ELEM` | 5 mm |
++| element length of the reported spectra and reactions | `ELEM_REPORT` | `None`: chosen by the mesh-convergence check printed by the driver |
++| in-loop harmonic solver | `HARMONIC_SOLVER` | `"modal"` (`"direct"` = banded reference solver) |
++| modal cut-off $f_{\mathrm{cut}}=3f_2$ with residual flexibility | `MODAL_FCUT` | 3.0 (`None` = complete basis) |
++| frequency grid: $n_b$ base points, $\eta_B$ window half-width, $m_B$ points per bandwidth | `fem_beam3d._adaptive_freq_grid(n_base, span, pts_per_bw)` | 64, 4, 4 |
+ 
+ ## ACO search
+ 
+-| Paper | Code | Default / reported |
++| Paper | Code | Reported |
+ | --- | --- | --- |
+ | $\xi$ balanced detour budget | `params["slack_balance"]` | 0.5 (0 = classic straight-line bound) |
+-| bidirectional fraction | `params["bidirectional"]` | 0.5 (0 = all ants from $A$) |
+-| $d^{\mathcal{G}}$ geodesic distance field | `grid.distances_from` | computed when $\xi>0$; a second field for B-started ants |
+-| $\alpha$ pheromone exponent | `params["alpha"]` | 1.0 |
++| bidirectional construction, $n_{\mathrm{rev}}=\operatorname{round}(n_{\mathrm{ant}}/2)$ ants started at $B$ | `params["bidirectional"]` | 0.5 (0 = all ants from $A$) |
++| $d^{\mathcal{G}}$ geodesic distance field | `grid.distances_from` | computed when $\xi>0$; a second field for the ants started at $B$ |
++| $\alpha$ pheromone exponent | `params["alpha"]` | 1 |
+ | $\rho$ evaporation | `params["rho"]` | 0.15 |
+ | $\tau_0$, $(\tau_{\min},\tau_{\max})$ | `params["tau0"]`, `params["tau_bounds"]` | 1, (0.05, 8) |
+-| $Q_\tau$ deposit scale, $w_e$ elitist weight | `params["Q_tau"]`, `params["elitist_weight"]` | 1, 1 |
+-| $q_0^{\mathrm{s}}, q_0^{\mathrm{e}}$ exploitation ramp | `params["q0_anneal"]` | (0.2, 0.9) |
+-| $T_q$ exploration window | `params["q0_iters"]` | $\mathrm{rclip}(5h, 40, 120)$, $h$ = mean hops per axis |
+-| $T$, $n_{\mathrm{patience}}$, $n_{\mathrm{stall}}$ | `params["max_iter"]`, `["patience"]`, `["stagnation_reset"]` | $4T_q$, $T_q$, $\lfloor T_q/2\rfloor$ |
++| $Q_\tau$ deposit scale, $w_e$ best-so-far weight | `params["Q_tau"]`, `params["elitist_weight"]` | 1, 1 |
++| warm-start corridors, pheromone raised to $\min(6\tau_0,\tau_{\max})$ | `seed_paths=` argument of `aco.optimize`, built by `grid.diverse_seed_paths` (`N_SEED_ROUTES`) | staircase only, one corridor |
++| $q_0^{\mathrm{s}}, q_0^{\mathrm{e}}$ linear schedule of the exploitation probability | `params["q0_anneal"]` | (0.2, 0.9) |
++| $T_q$ exploration window | `params["q0_iters"]` | $\mathrm{rclip}(5h_g, 40, 120)$ |
++| $n_{\mathrm{ant}}$ ants per iteration | `params["n_ants"]` | $\mathrm{rclip}(2.8h_g, 12, 60)$ |
++| $n_{\mathrm{patience}}$, $n_{\mathrm{stall}}$, $T$ | `params["patience"]`, `["stagnation_reset"]`, `["max_iter"]` | $T_q$, $\lfloor T_q/2\rfloor$, $4T_q$ |
+ | $\varepsilon_J$ progress tolerance | `params["improve_tol"]` | $10^{-2}$ |
+-| $\kappa_c$ concentration gate for the restart | `params["kick_concentration"]` | 3 |
+-| $\delta$ restart intensity | `params["stagnation_smooth"]` | 1 (full reset) |
+-| $n_{\mathrm{ant}}$ ants per iteration | `params["n_ants"]` | $\mathrm{rclip}(2.8h, 12, 60)$ |
+-| multi-start seeds $N_s$ | `SEEDS` | [3, 5, 7, 11, 13] |
++| $\beta_c$ concentration condition of the stagnation restart | `params["kick_concentration"]` | 3 |
++| restart intensity (reset of $\tau$ to $\tau_{\max}$) | `params["stagnation_smooth"]` | 1 (full reset) |
++| $N_s$ multi-start seeds | `SEEDS` | [3, 5, 7, 11, 13] |
++
++Here $h_g$ is the mean number of hops per axis, `mean(NODES) - 1`, and
++`rclip(v, lo, hi)` rounds `v` to the nearest integer and clamps it to
++`[lo, hi]`. `aco.auto_params(grid)` derives the budget entries from the
++lattice; see [`ACO_PARAMETERS.md`](ACO_PARAMETERS.md) for the role and tuning
++of each entry.
++
++## Scripts cited in the paper
+ 
+-`aco.auto_params(grid)` derives the budget entries from the lattice; see
+-[`ACO_PARAMETERS.md`](ACO_PARAMETERS.md) for the role and tuning of each entry.
++| Paper statement | Script |
++| --- | --- |
++| validation of the construction rules (turn-angle profiles, geodesic field, bidirectional construction) | `validate_construction.py` |
++| segment filter against the baffles, implemented in the driver rather than in `grid.build_neighbours` | `run_staircase.py` |
++| count of monotone routes and admissible fraction | `count_monotone.py` |
++| random search at equal finite-element budget | `baseline_search.py` |
+diff --git a/docs/temp.txt b/docs/temp.txt
+deleted file mode 100644
+index 8b13789..0000000
+--- a/docs/temp.txt
++++ /dev/null
+@@ -1 +0,0 @@
+-
+diff --git a/geometry.py b/geometry.py
+index 7934b5c..5e58b80 100644
+--- a/geometry.py
++++ b/geometry.py
+@@ -44,7 +44,7 @@ DEFAULT_SMOOTH_RMS = None
+ # curve. Set by the run scripts (TANGENT_CLAMP); None leaves the tangents free.
+ END_TANGENTS = (None, None)
+ # fit_spline(..., end_tangents="global") uses END_TANGENTS; end_tangents=None fits with
+-# free tangents regardless (used for the template baselines, whose dense point sets
++# free tangents regardless (used for the baseline routes, whose dense point sets
+ # would develop a kink if their millimetre-long end spans were clamped).
+ 
+ 
+diff --git a/make_paper_figures.py b/make_paper_figures.py
+index 4c0f860..10f1e25 100644
+--- a/make_paper_figures.py
++++ b/make_paper_figures.py
+@@ -214,7 +214,7 @@ def fig_sensitivity():
+     ax.semilogy(freqs / 1e3, np.abs(W_poly) + 1e-30, color=C_POLY, lw=1.8, label="polyline")
+     ax.semilogy(freqs / 1e3, np.abs(W_spl) + 1e-30, color=C_SPL, lw=1.8, label="same waypoints, as built spline")
+     ax.set_xlabel("frequency [kHz]"); ax.set_ylabel(YL)
+-    ax.set_title("Geometry sensitivity: smoothing the polyline")
++    # no in-figure title: the manuscript caption describes the panel
+     ax.set_xlim(0, 12); ax.grid(True, which="both", ls=":", alpha=0.4); ax.legend(frameon=False, fontsize=8.5, loc="lower right")
+     fig.tight_layout(); _save(fig, "fig_sensitivity_frf.pdf")
+ 
+diff --git a/plotting.py b/plotting.py
+index ac9d9c5..cb31ecc 100644
+--- a/plotting.py
++++ b/plotting.py
+@@ -202,7 +202,7 @@ def plot_convergence(result, fname, show=False):
+     convergence signal), and the iteration mean (how much the colony still explores).
+     All three carry NaN on iterations with no feasible ants; markers keep isolated
+     feasible iterations visible where a plain line would vanish. Vertical dashed lines
+-    mark stagnation kicks (the jumps in the iteration-best right after them are
++    mark stagnation restarts (the jumps in the iteration-best right after them are
+     deliberate re-exploration, not instability). When the warm-start seed sets the
+     initial best, a diamond labels it: a best-so-far line pinned well below the colony
+     from iteration 1 then reads as "the seeded route was never beaten", which is a
+@@ -245,7 +245,7 @@ def plot_convergence(result, fname, show=False):
+         if axf is not None:
+             axf.axvline(k, color="0.55", ls="--", lw=0.9, zorder=2)
+     if resets:
+-        ax.plot([], [], color="0.55", ls="--", lw=0.9, label="stagnation kick")
++        ax.plot([], [], color="0.55", ls="--", lw=0.9, label="stagnation restart")
+ 
+     if mean.size == n and np.isfinite(mean).any():
+         ax.plot(it, mean, "-", color="#9bb4c9", lw=1.0, marker=".", ms=3,
+@@ -278,7 +278,7 @@ def plot_convergence(result, fname, show=False):
+                 ha="center", fontsize=ANNOTATION_FS, color="0.35")
+ 
+     ax.set_ylabel(r"band-integrated input power  [W$\cdot$Hz]")
+-    ax.set_title("Search history: objective per iteration")
++    # no in-figure title: the manuscript caption describes the panel
+     ax.grid(True, which="both", ls=":", alpha=0.5)
+     ax.legend(frameon=False, fontsize=LEGEND_FS, loc="upper center",
+               bbox_to_anchor=(0.5, -0.02), ncol=4, columnspacing=1.6,
+@@ -399,55 +399,75 @@ def plot_baseline(mc_powers, aco_power, diagonal_power, fname):
+ 
+ 
+ def plot_spline(grid, waypoint_ids, tck, nodes, fname, start_id, target_id,
+-                r_min=None, r_min_pt=None, show=False, keepout=None):
+-    """3D comparison: piecewise-linear route vs smooth spline vs beam-mesh nodes."""
++                r_min=None, r_min_pt=None, show=False, keepout=None,
++                baseline_pts=None, baseline_label="baseline",
++                title=None, legend=True, show_nodes=False):
++    """3D view of the optimized route: lattice polyline, as-built spline and
++    (optionally) the beam nodes and the baseline route."""
+     import geometry as geo
++    import matplotlib.patheffects as pe
+     cmin = grid["coords"].min(0)
+     cmax = grid["coords"].max(0)
+     ext_m = np.where((cmax - cmin) > 0, cmax - cmin, 1.0)
+     fig, ax, _zoom = _fig3d(ext_m, base=(6.4, 5.8))
+-    _draw_grid(ax, grid, alpha=0.30)
++    ax.computed_zorder = False          # honour the explicit zorder of each artist below
++
++    # lattice as a faint background: small, nearly transparent nodes
++    c = grid["coords"] * 1e3
++    ax.scatter(c[:, 0], c[:, 1], c[:, 2], s=5, c="0.55", alpha=0.12,
++               depthshade=False, zorder=1)
+ 
+     if keepout is not None:
+-        # accepts a single (lo, hi) box or a list of boxes; drawn with the same
+-        # translucent-face + strong-edge treatment as every other obstacle figure
+         kb = keepout if isinstance(keepout, list) else [keepout]
+         for bx in kb:
+-            clo = np.maximum(np.asarray(bx[0]), cmin)   # clip to the domain so a baffle
+-            chi = np.minimum(np.asarray(bx[1]), cmax)   # extended past a wall stays inside
++            clo = np.maximum(np.asarray(bx[0]), cmin)
++            chi = np.minimum(np.asarray(bx[1]), cmax)
+             _add_box(ax, (clo, chi))
+         ax.plot([], [], [], color=OBSTACLE_EDGE, lw=OBSTACLE_EDGE_LW, label="keep-out")
+ 
++    if baseline_pts is not None:
++        bl = geo.eval_spline(geo.fit_spline(np.asarray(baseline_pts), smooth=0.0,
++                                            end_tangents=None), 300) * 1e3
++        ax.plot(bl[:, 0], bl[:, 1], bl[:, 2], "--", color="#f0a800", lw=1.4,
++                alpha=0.9, label=baseline_label, zorder=3)
++
+     wp = path_coords(grid, waypoint_ids) * 1e3
+-    ax.plot(wp[:, 0], wp[:, 1], wp[:, 2], "--", color="#2a4d69", lw=1.4,
+-            marker="o", ms=4, label="ACO route (waypoints)")
++    ax.plot(wp[:, 0], wp[:, 1], wp[:, 2], "--", color="#2a4d69", lw=1.0,
++            marker="o", ms=3.5, label="ACO route (waypoints)", zorder=4)
+ 
+     curve = geo.eval_spline(tck, 400) * 1e3
+-    ax.plot(curve[:, 0], curve[:, 1], curve[:, 2], "-", color="#b3122c", lw=2.6,
+-            label="smooth spline")
+-
+-    nm = nodes * 1e3
+-    ax.scatter(nm[:, 0], nm[:, 1], nm[:, 2], s=8, c="#1b7837",
+-               label=f"beam nodes (n={len(nodes)})")
++    ax.plot(curve[:, 0], curve[:, 1], curve[:, 2], "-", color="#b3122c", lw=3.0,
++            label="smooth spline", zorder=6,
++            path_effects=[pe.withStroke(linewidth=5.5, foreground="white")])
++
++    if show_nodes:
++        nm = nodes * 1e3
++        ax.scatter(nm[:, 0], nm[:, 1], nm[:, 2], s=4, c="#1b7837", alpha=0.9,
++                   zorder=7, label=f"beam nodes (n={len(nodes)})")
++    # waypoints on top of the spline: the lattice vertices the centreline passes through
++    ax.scatter(wp[:, 0], wp[:, 1], wp[:, 2], s=14, c="#2a4d69",
++               edgecolor="white", linewidth=0.4, zorder=7)
+ 
+     A = grid["coords"][start_id] * 1e3
+     B = grid["coords"][target_id] * 1e3
+-    ax.scatter(*A, s=80, c="#f0a800", edgecolor="k", zorder=6)
+-    ax.scatter(*B, s=80, c="#1b7837", edgecolor="k", zorder=6)
++    ax.scatter(*A, s=80, c="#f0a800", edgecolor="k", zorder=8)
++    ax.scatter(*B, s=80, c="#1b7837", edgecolor="k", zorder=8)
+     if r_min_pt is not None:
+         p = np.asarray(r_min_pt) * 1e3
+-        ax.scatter(*p, s=70, marker="x", c="k", zorder=7,
++        ax.scatter(*p, s=70, marker="x", c="k", zorder=9,
+                    label=f"tightest bend R={r_min*1e3:.0f} mm" if r_min else None)
+ 
+-    ax.set_title("Manufacturable centreline: spline through the route")
++    if title:
++        ax.set_title(title)
+     ax.set_xlabel("x [mm]"); ax.set_ylabel("y [mm]"); ax.set_zlabel("z [mm]")
+-    ax.legend(frameon=False, loc="upper left", fontsize=LEGEND_FS)
++    if legend:
++        ax.legend(frameon=False, loc="upper left", fontsize=LEGEND_FS)
+     _apply_manuscript_typography(ax)
+-    _frame_3d(ax, cmin, cmax, ext_m, zoom=_zoom)   # equal aspect so the shape is not distorted
++    _frame_3d(ax, cmin, cmax, ext_m, zoom=_zoom)
+     _finish_3d(fig, ext_m)
+     _save_ink_tight(fig, fname, dpi=140)
+     if not show:
+-        plt.close(fig)                     # keep open for an interactive window when show=True
++        plt.close(fig)
+ 
+ 
+ OBSTACLE_EDGE = "#7b1fa2"      # single visual identity for obstacle outlines, used by
+@@ -682,7 +702,7 @@ def plot_frf(grid, result, fname, mat, sec, band_hz, evaluate_spectrum,
+     freqs = np.linspace(f_start, f_hi, 400)
+     W = evaluate_spectrum(path_coords(grid, result["best_path"]), freqs)
+     fig, ax = plt.subplots(figsize=(7.5, 4.2))
+-    ax.semilogy(freqs, np.abs(W), color="#b3122c", lw=2.0, label="optimized path", zorder=4)
++    ax.semilogy(freqs, np.abs(W), color="#b3122c", lw=2.0, label="optimized route", zorder=4)
+     if baseline_coords is not None:
+         # the baseline may need its own evaluator (e.g. a spline fit with free end
+         # tangents when the optimized route has prescribed exit/arrival directions)
+@@ -695,8 +715,7 @@ def plot_frf(grid, result, fname, mat, sec, band_hz, evaluate_spectrum,
+     ax.set_xlim(f_lo, f_hi)                      # always 0 to 10000 Hz
+     ax.set_xlabel("frequency [Hz]")
+     ax.set_ylabel(r"$W_\text{in}(f)$ [W]")
+-    ax.set_title("Input-power FRF: optimized pipe vs baseline"
+-                 if baseline_coords is not None else "Input-power FRF of the optimized pipe")
++    # no in-figure title: the manuscript caption describes the panel
+     ax.grid(True, which="both", ls=":", alpha=0.5)
+     ax.legend(frameon=False)
+     _apply_manuscript_typography(ax)
+diff --git a/run_sphere.py b/run_sphere.py
+index b8f5329..576a372 100644
+--- a/run_sphere.py
++++ b/run_sphere.py
+@@ -29,6 +29,7 @@ import aco as A
+ import fem_beam3d as fem
+ import geometry as geo
+ import plotting as P
++import cad_export as CAD
+ 
+ # ============================================================================ #
+ # CONFIGURATION  --  edit these to change the problem. All lengths in metres.
+@@ -40,7 +41,7 @@ import plotting as P
+ # size/(nodes-1), per axis, so you control the box and the resolution directly
+ # and never have to keep them consistent by hand.
+ BOX_SIZE = (0.300, 0.300, 0.300)   # box extents (Lx, Ly, Lz) [m]
+-NODES    = (20, 20, 20)               # nodes per axis (nx, ny, nz); each >= 2
++NODES    = (21, 21, 21)               # nodes per axis (nx, ny, nz); each >= 2
+ CONNECT  = 26                      # route directions per node: 6 (faces), 18 (+edges), 26 (+body diagonals)
+ # examples:
+ #   bigger box, same node count : BOX_SIZE = (0.40, 0.40, 0.40)               -> coarser grid
+@@ -126,7 +127,7 @@ E = 210e9; nu = 0.3; rho = 7850.0   # Young [Pa], Poisson [-], density [kg/m^3]
+ # --- excitation and evaluation ----------------------------------------------
+ # One or several target bands to minimise: a list of (lo, hi) tuples. A single
+ # band is just a one-element list, e.g. BANDS = [(6000.0, 10000.0)].
+-BANDS = [(3000.0, 5000.0)]    # [Hz]
++BANDS = [(4000.0, 8000.0)]    # [Hz]
+ # One weight per band, that YOU set. The objective is the weighted sum of the
+ # per-band input-power integrals: sum_k BAND_WEIGHTS[k] * integral_over_band_k.
+ # Bands at different frequencies carry very different raw power, so these weights
+@@ -203,14 +204,16 @@ MODAL_FCUT = 3.0          # "modal" only: keep modes below MODAL_FCUT x f_hi of
+ # --- output -----------------------------------------------------------------
+ SHOW = True               # open the final 3D shape in an interactive window you can rotate/zoom
+                           # (set False for headless/batch runs; PNGs are saved either way)
++EXPORT_CAD = True         # write the winning centreline as IGES/STEP B-spline curves
++CAD_UNITS  = "MM"         # CAD systems expect millimetres; the code works in metres
+ 
+ # --- optimiser (auto-scaled to the grid) ------------------------------------
+ # The ACO budget (ants, iterations, and the stagnation/early-stop windows) is
+ # set automatically from the grid size, so adding nodes for a finer geometry
+ # does not need manual retuning. Put entries in ACO_OVERRIDES to pin or tune any
+ # parameter. For premature stagnation of the objective, the two relevant knobs:
+-#   "stagnation_reset" : <int>    iters of no improvement that trigger a kick (smaller = react sooner)
+-#   "stagnation_smooth": <0..1>   kick strength: 1.0 = full restart, <1 = gentle pull toward tau_max
++#   "stagnation_reset" : <int>    iters of no improvement that trigger a restart (smaller = react sooner)
++#   "stagnation_smooth": <0..1>   restart intensity: 1.0 = full reset of tau to tau_max, <1 = gentle pull toward tau_max
+ # Lowering q0_anneal start or raising tau_bounds[0] also fights early convergence.
+ # Performance and route-shape knobs (see aco.py for the full documentation):
+ #   "n_eval_workers": "auto"  evaluate the iteration's routes in parallel processes
+@@ -464,13 +467,13 @@ print(f"  routes rejected  : {r2['n_reject_length']} on spline length, "
+       f"{r2['n_reject_radius']} on bend radius, "
+       f"{r2['n_reject_keepout']} on keep-out")
+ print(f"  search           : {r2['n_fem_calls']} FEM evals, "
+-      f"{r2['n_stagnation_events']} stagnation kick(s)")
++      f"{r2['n_stagnation_events']} stagnation restart(s)")
+ print(f"  search time      : {_time.time() - _t_search:.0f} s wall-clock for the whole search")
+ 
+ ms = r2.get("multistart")
+ if ms and len(ms["seeds"]) > 1:
+     print("  per-seed results (reported route = seed %d):" % ms["winning_seed"])
+-    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "kicks", "time[s]"))
++    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "restarts", "time[s]"))
+     for s_, J_, F_, I_, K_, T_ in zip(ms["seeds"], ms["best_powers"], ms["fem_calls"], ms["n_iter"], ms["n_stagnation_events"], ms["wall_s"]):
+         print("    %6d %14s %8d %6d %6d %8.0f" % (s_, ("%.4e" % J_) if J_ is not None else "none", F_, I_, K_, T_))
+     print("    sum of the per-seed times: %.0f s (serial-equivalent); wall-clock above is what the run took"
+@@ -489,6 +492,16 @@ if HARMONIC_SOLVER != "direct":
+     print(f"  direct check     : winner re-evaluated with the direct solver on the {ELEM*1e3:.1f} mm mesh: "
+           f"J = {J_direct:.4e} (search value {r2['best_power']:.4e}, deviation {abs(J_direct/r2['best_power']-1):.1e})")
+ 
++if EXPORT_CAD:
++    _cad_scale = 1e3 if CAD_UNITS.upper() == "MM" else 1.0
++    _igs = CAD.write_iges(tck, "route_sphere_best.igs", scale=_cad_scale, units=CAD_UNITS)
++    _stp = CAD.write_step(tck, "route_sphere_best.stp", scale=_cad_scale, units=CAD_UNITS)
++    _err = max(CAD.roundtrip_error(tck, _igs, scale=_cad_scale),
++               CAD.roundtrip_error(tck, _stp, scale=_cad_scale))
++    print(f"  CAD export       : {_igs}, {_stp} "
++          f"({CAD.control_points(tck)[1].shape[0]} control points, "
++          f"degree {CAD.control_points(tck)[2]}; round-trip error {_err:.1e} m)")
++
+ # computational-cost figure for this case (and persist the cost data for later)
+ import cost_figure
+ cost_figure.save_cost_data(r2, "fig_sphere_cost_data.npz")
+@@ -530,7 +543,6 @@ if ELEM_REPORT is not None:
+ print(f"    reported mesh: {chosen*1e3:.1f} mm")
+ 
+ nodes, elems, _ = geo.resample_by_length(tck, chosen)
+-P.plot_spline(grid, route, tck, nodes, "fig_sphere_spline_manufacturable.png", sid, tid, R_achieved, R_pt, show=SHOW, keepout=keepout_box)
+ 
+ # evolution of the input power over the optimisation (best-so-far and iteration mean)
+ P.plot_convergence(r2, "fig_sphere_spline_convergence.png", show=SHOW)
+@@ -646,6 +658,12 @@ if base_pts is not None:
+ else:
+     print("  reference baseline: not available for this configuration (comparison skipped)")
+ 
++P.plot_spline(grid, route, tck, nodes, "fig_sphere_spline_manufacturable.png", sid, tid, R_achieved, R_pt,
++              show=SHOW, keepout=keepout_box, baseline_pts=base_pts, baseline_label=base_label)
++
++P.plot_spline(grid, route, tck, nodes, "fig_sphere_spline_manufacturable_view2.png", sid, tid, R_achieved, R_pt,
++              show=SHOW, keepout=keepout_box, baseline_pts=base_pts, baseline_label=base_label, legend=False)
++
+ P.plot_all_splines(grid, r2["evaluated_paths"], route, "fig_sphere_all_splines.png", sid, tid,
+                    smooth=SMOOTH, boxes=([keepout_box] if keepout_box is not None else None),
+                    baseline_pts=base_pts, baseline_label=base_label, show=SHOW)
+diff --git a/run_spline.py b/run_spline.py
+index ade2ea8..0744d27 100644
+--- a/run_spline.py
++++ b/run_spline.py
+@@ -41,6 +41,13 @@ CAD_UNITS  = "MM"         # CAD systems expect millimetres; the code works in me
+ # and never have to keep them consistent by hand.
+ BOX_SIZE = (0.300, 0.300, 0.300)   # box extents (Lx, Ly, Lz) [m]
+ NODES    = (15, 15, 15)               # nodes per axis (nx, ny, nz); each >= 2
++# Box-domain cases of the paper (Table of case definitions), all with LMAX_FACTOR = 1.7:
++#   representative        NODES = (15,15,15)  BANDS = [(500, 1500)]             EXCLUDE_CENTER = False
++#   free cube, low band   NODES = (15,15,15)  BANDS = [(1000, 3000)]            EXCLUDE_CENTER = False
++#   free cube, mid band   NODES = (20,20,20)  BANDS = [(5000, 7000)]            EXCLUDE_CENTER = False
++#   free cube, high band  NODES = (23,23,23)  BANDS = [(6000, 10000)]           EXCLUDE_CENTER = False
++#   free cube, two bands  NODES = (21,21,21)  BANDS = [(1000, 2000), (6000, 8000)]  BAND_WEIGHTS = (5.0, 1.0)
++#   central box           NODES = (15,15,15)  BANDS = [(1000, 3000)]            EXCLUDE_CENTER = 0.5
+ CONNECT  = 26                      # route directions per node: 6 (faces), 18 (+edges), 26 (+body diagonals)
+ # examples:
+ #   bigger box, same node count : BOX_SIZE = (0.40, 0.40, 0.40)               -> coarser grid
+@@ -53,7 +60,7 @@ CONNECT  = 26                      # route directions per node: 6 (faces), 18 (+
+ # each axis to remove, centered. None disables; a scalar applies to all axes.
+ #   EXCLUDE_CENTER = 0.4              -> remove the central 40% cube
+ #   EXCLUDE_CENTER = (0.5, 0.5, 0.2) -> a central slab
+-EXCLUDE_CENTER  = False #0.4 #False
++EXCLUDE_CENTER  = False     # free cube; 0.5 reproduces the central-box case of the paper
+ # Removing nodes only stops waypoints inside the region; the smooth spline could
+ # still clip its corner. With this on, routes whose spline enters the box are
+ # also rejected (a true keep-out), tested cheaply before any FEM solve.
+@@ -110,7 +117,7 @@ E = 210e9; nu = 0.3; rho = 7850.0   # Young [Pa], Poisson [-], density [kg/m^3]
+ # --- excitation and evaluation ----------------------------------------------
+ # One or several target bands to minimise: a list of (lo, hi) tuples. A single
+ # band is just a one-element list, e.g. BANDS = [(6000.0, 10000.0)].
+-BANDS = [(500, 1500.0)]    # [Hz]
++BANDS = [(500.0, 1500.0)]   # [Hz]; representative case of the paper
+ # One weight per band, that YOU set. The objective is the weighted sum of the
+ # per-band input-power integrals: sum_k BAND_WEIGHTS[k] * integral_over_band_k.
+ # Bands at different frequencies carry very different raw power, so these weights
+@@ -194,8 +201,8 @@ SHOW = True               # open the final 3D shape in an interactive window you
+ # set automatically from the grid size, so adding nodes for a finer geometry
+ # does not need manual retuning. Put entries in ACO_OVERRIDES to pin or tune any
+ # parameter. For premature stagnation of the objective, the two relevant knobs:
+-#   "stagnation_reset" : <int>    iters of no improvement that trigger a kick (smaller = react sooner)
+-#   "stagnation_smooth": <0..1>   kick strength: 1.0 = full restart, <1 = gentle pull toward tau_max
++#   "stagnation_reset" : <int>    iters of no improvement that trigger a restart (smaller = react sooner)
++#   "stagnation_smooth": <0..1>   restart intensity: 1.0 = full reset of tau to tau_max, <1 = gentle pull toward tau_max
+ # Lowering q0_anneal start or raising tau_bounds[0] also fights early convergence.
+ # Performance and route-shape knobs (see aco.py for the full documentation):
+ #   "n_eval_workers": "auto"  evaluate the iteration's routes in parallel processes
+@@ -401,7 +408,7 @@ print(f"  routes rejected  : {r2['n_reject_length']} on spline length, "
+       f"{r2['n_reject_radius']} on bend radius, "
+       f"{r2['n_reject_keepout']} on keep-out")
+ print(f"  search           : {r2['n_fem_calls']} FEM evals, "
+-      f"{r2['n_stagnation_events']} stagnation kick(s)")
++      f"{r2['n_stagnation_events']} stagnation restart(s)")
+ print(f"  search time      : {_time.time() - _t_search:.0f} s wall-clock for the whole search")
+ if EXIT_DIR_A is not None or ARRIVE_DIR_B is not None:
+     from scipy.interpolate import splev as _splev
+@@ -419,7 +426,7 @@ if EXIT_DIR_A is not None or ARRIVE_DIR_B is not None:
+ ms = r2.get("multistart")
+ if ms and len(ms["seeds"]) > 1:
+     print("  per-seed results (reported route = seed %d):" % ms["winning_seed"])
+-    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "kicks", "time[s]"))
++    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "restarts", "time[s]"))
+     for s_, J_, F_, I_, K_, T_ in zip(ms["seeds"], ms["best_powers"], ms["fem_calls"], ms["n_iter"], ms["n_stagnation_events"], ms["wall_s"]):
+         print("    %6d %14s %8d %6d %6d %8.0f" % (s_, ("%.4e" % J_) if J_ is not None else "none", F_, I_, K_, T_))
+     print("    sum of the per-seed times: %.0f s (serial-equivalent); wall-clock above is what the run took"
+@@ -493,7 +500,6 @@ if ELEM_REPORT is not None:
+ print(f"    reported mesh: {chosen*1e3:.1f} mm")
+ 
+ nodes, elems, _ = geo.resample_by_length(tck, chosen)
+-P.plot_spline(grid, route, tck, nodes, "fig_spline_manufacturable.png", sid, tid, R_achieved, R_pt, show=SHOW, keepout=keepout_box)
+ 
+ # evolution of the input power over the optimization (best-so-far and iteration mean)
+ P.plot_convergence(r2, "fig_spline_convergence.png", show=SHOW)
+@@ -506,8 +512,9 @@ base_pts, base_info = BL.helix_baseline(grid["coords"][sid], grid["coords"][tid]
+                                         grid["coords"].min(0), grid["coords"].max(0),
+                                         boxes=base_boxes, verbose=True)
+ if base_pts is not None and geo.END_TANGENTS != (None, None):
+-    print("  NOTE: the template baseline keeps free end tangents (dense curve, fitted with end_tangents=None);"
++    print("  NOTE: the baseline route keeps free end tangents (dense curve, fitted with end_tangents=None);"
+           " only the optimized route satisfies the prescribed exit/arrival directions.")
++    
+ if base_pts is not None:
+     bn, be, _ = geo.resample_by_length(geo.fit_spline(base_pts, smooth=SMOOTH, end_tangents=None), ELEM)
+     W_base = fem.band_integrated_power(bn, be, mat, sec, BANDS, weights=band_weights,
+@@ -519,6 +526,12 @@ if base_pts is not None:
+ else:
+     print("  helix baseline: no feasible helix for this configuration (skipped)")
+ 
++P.plot_spline(grid, route, tck, nodes, "fig_spline_manufacturable.png", sid, tid, R_achieved, R_pt,
++              show=SHOW, keepout=keepout_box, baseline_pts=base_pts, baseline_label="helix baseline")
++
++P.plot_spline(grid, route, tck, nodes, "fig_spline_manufacturable_view2.png", sid, tid, R_achieved, R_pt,
++              show=SHOW, keepout=keepout_box, baseline_pts=base_pts, baseline_label="helix baseline", legend=False)
++
+ P.plot_all_splines(grid, r2["evaluated_paths"], route, "fig_all_splines.png", sid, tid,
+                    smooth=SMOOTH, boxes=([keepout_box] if keepout_box is not None else None),
+                    baseline_pts=base_pts, baseline_label="helix baseline", show=SHOW)
+diff --git a/run_staircase.py b/run_staircase.py
+index 49465fb..d80b5ce 100644
+--- a/run_staircase.py
++++ b/run_staircase.py
+@@ -40,8 +40,8 @@ import plotting as P
+ # so the straight A->B line is blocked and the non-convex domain genuinely shapes
+ # the route. Baffles are defined by the lattice layers they block (robust to the
+ # grid), and the matching physical boxes feed the spline-containment test.
+-BOX_SIZE = (0.300, 0.160, 0.300)   # box extents (Lx, Ly, Lz) [m]
+-NODES    = (15, 11, 15)               # nodes per axis (nx, ny, nz)
++BOX_SIZE = (0.300, 0.150, 0.300)   # box extents (Lx, Ly, Lz) [m]
++NODES    = (23, 12, 23)               # nodes per axis (nx, ny, nz)
+ CONNECT  = 26                      # 6 (faces), 18 (+edges), 26 (+body diagonals)
+ 
+ # Baffles. The x-columns are DERIVED from NODES so that each baffle really touches the
+@@ -98,13 +98,13 @@ OD = 2 * OUTER_RADIUS
+ # clearance is always measured and printed after the run). Set e.g. OD to enforce
+ # d_min >= OD inside geom_fn; the arc window pi*R_MIN excludes curvature-driven
+ # proximity, so a bend at the radius limit is never a false positive.
+-SELF_CLEARANCE = None #OD  #None #OD
++SELF_CLEARANCE = OD  #None #OD
+ E = 210e9; nu = 0.3; rho = 7850.0
+ 
+ # --- excitation and target bands --------------------------------------------
+ # One or several frequency bands to minimise: a list of (lo, hi) tuples. A single
+ # band is just a one-element list, e.g. BANDS = [(6000.0, 10000.0)].
+-BANDS = [(4000.0, 6000.0)]                     # [Hz]
++BANDS = [(6000.0, 10000.0)]                     # [Hz]
+ # One weight per band, set by you. The objective is the weighted sum of the
+ # per-band input-power integrals: sum_k BAND_WEIGHTS[k] * integral_over_band_k.
+ # Bands at different frequencies carry very different power levels (a higher band
+@@ -131,8 +131,8 @@ N_SEED_ROUTES = 1
+ # colonies, the best is kept, so quality can only match or improve; every seed holds
+ # its own route cache, so its FEM count is the true cost of that run. (2) More seed corridors
+ # (N_SEED_ROUTES above). (3) ACO_OVERRIDES={"q0_rewind_on_kick": True}: after a
+-# stagnation kick the q0 anneal restarts, so the re-diversified pheromone is genuinely
+-# re-explored instead of exploited greedily; changes post-kick dynamics only.
++# stagnation restart the q0 schedule is rewound, so the re-diversified pheromone is genuinely
++# re-explored instead of exploited greedily; changes post-restart dynamics only.
+ # FITPACK spline smoothing. SMOOTH=0 interpolates every lattice waypoint. Positive
+ # values preserve the endpoints but allow the fitted curve to deviate from internal
+ # waypoints, which regularizes fine-grid zig-zags. On NODES=(12,8,12), for example,
+@@ -395,7 +395,7 @@ if EXIT_DIR_A is not None or ARRIVE_DIR_B is not None:
+ ms = r.get("multistart")
+ if ms and len(ms["seeds"]) > 1:
+     print("  per-seed results (reported route = seed %d):" % ms["winning_seed"])
+-    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "kicks", "time[s]"))
++    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "restarts", "time[s]"))
+     for s_, J_, F_, I_, K_, T_ in zip(ms["seeds"], ms["best_powers"], ms["fem_calls"], ms["n_iter"], ms["n_stagnation_events"], ms["wall_s"]):
+         print("    %6d %14s %8d %6d %6d %8.0f" % (s_, ("%.4e" % J_) if J_ is not None else "none", F_, I_, K_, T_))
+     print("    sum of the per-seed times: %.0f s (serial-equivalent); wall-clock above is what the run took"
+@@ -455,44 +455,53 @@ if ELEM_REPORT is not None:
+ print(f"    reported mesh: {chosen*1e3:.1f} mm")
+ 
+ # geometry figure: demarcate the allowed lattice nodes (the domain) and the tube
+-def plot_staircase_route(grid, route, tck, fname, sid, tid, boxes, r_min=None, r_pt=None, show=False):
++def plot_staircase_route(grid, route, tck, fname, sid, tid, boxes, r_min=None, r_pt=None, show=False,
++                         baseline_pts=None, baseline_label="baseline", legend=True, title=None):
+     import matplotlib.pyplot as plt
++    import matplotlib.patheffects as pe
+     import geometry as geo
+     fig = plt.figure(figsize=(7.2, 6.4))
+     ax = fig.add_subplot(111, projection="3d")
++    ax.computed_zorder = False                      # honour the explicit zorder of each artist
+     gmin = grid["coords"].min(0); gmax = grid["coords"].max(0)
+ 
+-    # blocked regions (the baffles), clipped to the box; P._add_box gives the same
+-    # translucent faces and strong opaque edges as every other obstacle figure
++    # allowed lattice nodes as a faint background; the baffles, not the nodes, show the domain shape
++    C = grid["coords"] * 1e3
++    ax.scatter(C[:, 0], C[:, 1], C[:, 2], s=5, c="0.55", alpha=0.15, depthshade=False,
++               edgecolor="none", zorder=1)
++
++    # blocked regions (the baffles), clipped to the box
+     for lo, hi in boxes:
+         dlo = np.maximum(lo, gmin); dhi = np.minimum(hi, gmax)
+         P._add_box(ax, (dlo, dhi))
+-    ax.plot([], [], [], color=P.OBSTACLE_EDGE, lw=P.OBSTACLE_EDGE_LW, label="blocked region")
++    ax.plot([], [], [], color=P.OBSTACLE_EDGE, lw=P.OBSTACLE_EDGE_LW, label="keep-out")
+ 
+-    # allowed candidate nodes (these define the admissible domain shape)
+-    C = grid["coords"] * 1e3
+-    ax.scatter(C[:, 0], C[:, 1], C[:, 2], s=26, c="#2d5a8a", alpha=0.8,
+-               edgecolor="none", label="allowed lattice nodes")
++    if baseline_pts is not None:
++        bl = geo.eval_spline(geo.fit_spline(np.asarray(baseline_pts), smooth=0.0, end_tangents=None), 300) * 1e3
++        ax.plot(bl[:, 0], bl[:, 1], bl[:, 2], "--", color="#f0a800", lw=1.4, alpha=0.9,
++                label=baseline_label, zorder=3)
+ 
+-    # ACO route waypoints and the smooth manufacturable tube
+     wp = grid["coords"][np.asarray(route)] * 1e3
+-    ax.plot(wp[:, 0], wp[:, 1], wp[:, 2], "--", color="#27496d", lw=1.2,
+-            marker="o", ms=3, label="ACO route (waypoints)")
++    ax.plot(wp[:, 0], wp[:, 1], wp[:, 2], "--", color="#27496d", lw=1.0, marker="o", ms=3,
++            label="ACO route (waypoints)", zorder=4)
+     curve = geo.eval_spline(tck, 400) * 1e3
+-    ax.plot(curve[:, 0], curve[:, 1], curve[:, 2], "-", color="#b3122c", lw=2.8,
+-            label="optimized tube")
++    ax.plot(curve[:, 0], curve[:, 1], curve[:, 2], "-", color="#b3122c", lw=3.0, label="smooth spline",
++            zorder=6, path_effects=[pe.withStroke(linewidth=5.5, foreground="white")])
++    ax.scatter(wp[:, 0], wp[:, 1], wp[:, 2], s=14, c="#27496d", edgecolor="white", linewidth=0.4, zorder=7)
+ 
+     A = grid["coords"][sid] * 1e3; B = grid["coords"][tid] * 1e3
+-    ax.scatter(*A, s=95, c="#f0a800", edgecolor="k", zorder=6, label="A (drive)")
+-    ax.scatter(*B, s=95, c="#1b7837", edgecolor="k", zorder=6, label="B (support)")
++    ax.scatter(*A, s=95, c="#f0a800", edgecolor="k", zorder=8)
++    ax.scatter(*B, s=95, c="#1b7837", edgecolor="k", zorder=8)
+     if r_pt is not None:
+         p = np.asarray(r_pt) * 1e3
+-        ax.scatter(*p, s=70, marker="x", c="k", zorder=7,
++        ax.scatter(*p, s=70, marker="x", c="k", zorder=9,
+                    label=f"tightest bend R={r_min*1e3:.0f} mm" if r_min else None)
+ 
+-    ax.set_title("Non-convex (staircase) domain: allowed nodes and the optimized tube")
++    if title:
++        ax.set_title(title)
+     ax.set_xlabel("x [mm]"); ax.set_ylabel("y [mm]"); ax.set_zlabel("z [mm]")
+-    ax.legend(frameon=False, loc="upper left", fontsize=8)
++    if legend:
++        ax.legend(frameon=False, loc="upper left", fontsize=8)
+     ext = gmax - gmin
+     if ext.min() > 0:
+         ax.set_box_aspect(tuple(ext))
+@@ -500,9 +509,6 @@ def plot_staircase_route(grid, route, tck, fname, sid, tid, boxes, r_min=None, r
+     if not show:
+         plt.close(fig)
+ 
+-plot_staircase_route(grid, route, tck, "fig_staircase.png", sid, tid,
+-            keepout_boxes, r_min=R_achieved, r_pt=R_pt, show=SHOW)
+-
+ # evolution of the input power over the optimization (best-so-far and iteration mean)
+ P.plot_convergence(r, "fig_staircase_convergence.png", show=SHOW)
+ print("Saved: fig_staircase_convergence.png  (band-integrated input power vs iteration)")
+@@ -517,7 +523,7 @@ base_pts, base_info = BL.serpentine_gap_baseline(grid["coords"][sid], grid["coor
+                                                  grid["coords"].max(0), Lmax, R_MIN,
+                                                  smooth=SMOOTH, verbose=True)
+ if base_pts is not None and geo.END_TANGENTS != (None, None):
+-    print("  NOTE: the template baseline keeps free end tangents (dense curve, fitted with end_tangents=None);"
++    print("  NOTE: the baseline route keeps free end tangents (dense curve, fitted with end_tangents=None);"
+           " only the optimized route satisfies the prescribed exit/arrival directions.")
+ if base_pts is not None:
+     bn, be, _ = geo.resample_by_length(geo.fit_spline(base_pts, smooth=SMOOTH, end_tangents=None), ELEM)
+@@ -534,6 +540,13 @@ else:
+     print("  serpentine baseline       : no feasible route found; drawing routes without a baseline")
+     P.plot_all_splines(grid, r["evaluated_paths"], route, "fig_staircase_all_splines.png", sid, tid,
+                        smooth=SMOOTH, boxes=keepout_boxes, show=SHOW)
++
++plot_staircase_route(grid, route, tck, "fig_staircase.png", sid, tid, keepout_boxes,
++                     r_min=R_achieved, r_pt=R_pt, show=SHOW, baseline_pts=base_pts, baseline_label="serpentine baseline")
++
++plot_staircase_route(grid, route, tck, "fig_staircase_view2.png", sid, tid, keepout_boxes,
++                     r_min=R_achieved, r_pt=R_pt, show=SHOW, baseline_pts=base_pts, baseline_label="serpentine baseline", legend=False)
++
+ print("Saved: fig_staircase_all_splines.png  (every tested route faint, best solid)")
+ 
+ # one spline-cloud figure per seed (routes explored by that seed, its own best solid)
+diff --git a/time_iteration.py b/time_iteration.py
+new file mode 100644
+index 0000000..a6a7bc6
+--- /dev/null
++++ b/time_iteration.py
+@@ -0,0 +1,63 @@
++"""
++time_iteration.py
++Where does the time of one ACO iteration go? Loads the header of a run script, builds
++n routes with a uniform pheromone field (construction only), applies the geometric
++tests (geom_fn) and evaluates the first admissible routes with the objective used in
++the search. Prints the mean cost of each stage and the implied cost of one iteration
++(n_ants constructions + geometry tests + FEM on the admissible ones).
++
++    python time_iteration.py run_sphere.py [n_routes] [n_fem]
++"""
++import sys, io, contextlib, time
++import numpy as np
++
++script = sys.argv[1] if len(sys.argv) > 1 else "run_sphere.py"
++n_routes = int(sys.argv[2]) if len(sys.argv) > 2 else 60
++n_fem = int(sys.argv[3]) if len(sys.argv) > 3 else 5
++
++src = open(script, encoding="utf-8").read()
++i = src.index("A.optimize_multistart"); head = src[:src.rfind("\n", 0, i)].replace("SHOW = True", "SHOW = False")
++ns = {"__name__": "time_head"}
++t0 = time.perf_counter()
++with contextlib.redirect_stdout(io.StringIO()):
++    exec(compile(head, script + "[head]", "exec"), ns)
++print("%s | header %.1f s | %d retained nodes | Lmax %.0f mm" % (script, time.perf_counter() - t0, len(ns["grid"]["coords"]), ns["Lmax"] * 1e3))
++A, G, grid, adj, sid, tid, Lmax = ns["A"], ns["G"], ns["grid"], ns["adj"], ns["sid"], ns["tid"], ns["Lmax"]
++params = A.default_params(); params.update(ns["params"] if "params" in ns else ns["BASE"])
++geom_fn, objective = ns["geom_fn"], ns["objective_spline"]
++from grid import distances_from
++dist_t = distances_from(adj, tid)
++
++try:
++    import threadpoolctl
++    info = threadpoolctl.threadpool_info()
++    print("BLAS threads in this process: %s" % sorted({(d["internal_api"], d["num_threads"]) for d in info}))
++except Exception:
++    pass
++
++rng = np.random.default_rng(1)
++t_build, t_geom, t_fem = [], [], []
++n_done = n_ok = 0; feasible = []
++for k in range(n_routes):
++    t0 = time.perf_counter()
++    path, _ = A.build_one_ant(grid, adj, {}, sid, tid, Lmax, params, rng, q0=0.0, dist_target=dist_t)
++    t_build.append(time.perf_counter() - t0)
++    if path is None:
++        continue
++    n_done += 1
++    c = G.path_coords(grid, path)
++    t0 = time.perf_counter(); L, R, ok = geom_fn(c); t_geom.append(time.perf_counter() - t0)
++    if ok:
++        n_ok += 1; feasible.append(c)
++for c in feasible[:n_fem]:
++    t0 = time.perf_counter(); J = objective(c); t_fem.append(time.perf_counter() - t0)
++
++n_ants = params.get("n_ants", n_routes)
++print("construction : mean %.3f s, max %.3f s  (%d of %d completed)" % (np.mean(t_build), np.max(t_build), n_done, n_routes))
++print("geom_fn      : mean %.3f s                (%d of %d admissible)" % (np.mean(t_geom) if t_geom else float("nan"), n_ok, n_done))
++if t_fem:
++    print("objective    : mean %.2f s per route (%d evaluated)" % (np.mean(t_fem), len(t_fem)))
++    frac = n_ok / max(n_done, 1)
++    est = n_ants * (np.mean(t_build) + np.mean(t_geom)) + n_ants * frac * np.mean(t_fem)
++    print("one iteration of %d ants, serial, at this admissibility: about %.0f s (%.0f s of it in the FEM)"
++          % (n_ants, est, n_ants * frac * np.mean(t_fem)))
