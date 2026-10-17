@@ -275,6 +275,7 @@ The paper citation should be added here after acceptance and DOI assignment.
 This project is released under the MIT License — see [`LICENSE`](LICENSE).
 
 <p align="center">
-   <img src="https://github.com/MOPT-UFSC/ACOROUTE/tree/main/docs/MOPT4.PNG?raw=true" alt="MOPT logo" width="1100"/>
+  <img src="docs/MOPT4.PNG" alt="MOPT logo" width="1100"/>
+</p>
 
 
