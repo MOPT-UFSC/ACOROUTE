@@ -41,36 +41,7 @@ gamma * S * dG(x, B) / D0). At gamma = 1 the test takes the normalized form
 
     l / Lmax + dG(x, B) / D0 <= 1,
 
-a uniform rationing of the detour budget along the route. Using dG rather than
-the straight-line distance matters in obstacle domains (baffles, keep-outs):
-detours *forced* by the geometry are part of D0, not of S, so they are never
-charged against the discretionary slack. This yields a guarantee: along any
-graph-shortest route l = D0 - dG(x, B) at every node, so the test reduces to
-l + dG <= D0 + gamma * S * dG / D0 <= Lmax, and every graph-shortest route
-satisfies the length rule for all gamma <= 1 in any domain. The guarantee
-concerns the length rule alone: a geodesic route may still be excluded by the
-turn-angle pre-filter, and the stochastic constructor is not guaranteed to
-sample it within a finite operation budget. (With the straight-line bound in the
-reserve, the guarantee would hold only where the straight route is feasible; in
-a serpentine domain high gamma would then over-prune.) The mechanism is
-analogous to weighted A*: gamma = 0 keeps an exact lower bound (complete
-construction, biased turn distribution), gamma > 0 trades constructive
-completeness for a balanced turn distribution. Note the deliberate asymmetry at
-gamma = 0: the formula above with gamma = 0 would use the geodesic bound, which
-is slightly tighter than the straight-line one (dG >= d always, since the
-lattice metric dominates the Euclidean distance); for exact backward
-compatibility the implementation treats gamma = 0 as a special case and keeps
-the straight-line test, so the admissible set has a small discontinuity between
-gamma = 0 and gamma -> 0+. The reserve vanishes at the target (dG(B, B) = 0),
-so every constructed route still satisfies the true bound l <= Lmax and the
-exact as-built feasibility check on the spline is unchanged; only the set of
-routes the construction can produce shrinks monotonically with gamma, excluding
-routes whose discretionary detour is strongly front-loaded. The geodesic field
-dG(., B) is one Dijkstra sweep per optimize() call (grid.distances_from),
-shared by all ants; it also prunes, at no extra cost, any pocket of the FULL
-lattice from which B is unreachable within the remaining budget. Dead ends
-created dynamically by the tabu list are not captured by this static field and
-are still resolved by backtracking.
+a uniform rationing of the detour budget along the route. 
 """
 
 import numpy as np
