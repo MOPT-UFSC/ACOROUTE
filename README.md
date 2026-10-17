@@ -252,7 +252,7 @@ This is research code, not a certified pipe-design tool. In particular:
 
 ## About this repository
 
-The research code in this repository was written by the authors. The authors uploaded the original source files and organized the repository with the assistance of [Claude Code](https://claude.com/claude-code) (Anthropic), which structured the presentation — this README, the article/code cross-reference in [`docs/`](docs/), and the reproduction map (including internal documentation) — to ease the use of the code and its association with the paper. The method, implementation and results are the authors' own.
+The research code in this repository was written by the authors. The authors uploaded the original source files and organized the repository with the assistance of [Claude Code](https://claude.com/claude-code) (Anthropic), which structured the presentation (this README, the article/code cross-reference in [`docs/`](docs/), and the reproduction map, including internal documentation) to ease the use of the code and its association with the paper. The method, implementation and results are the authors' own.
 
 ## Citation
 
