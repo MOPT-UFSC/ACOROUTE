@@ -300,7 +300,8 @@ def main():
         print("  %-7s %5d %8d %14s %14s %8.3f %9d %8d %7.0f"
               % (r["control"], r["seed"], r["n_fem"], ("%.4e" % r["J"]) if r["J"] is not None else "none",
                  ("%.4e" % Ja) if Ja else "n/a", ratio, r["n_admissible"], r["n_restart"], r["wall_s"]))
-        rows.append((r["control"], r["seed"], r["n_fem"], r["J"], Ja, ratio, r["n_admissible"], r["n_tried"], r["wall_s"]))
+        rows.append((r["control"], r["seed"], r["n_fem"], r["J"], Ja, ratio, r["n_admissible"], r["n_tried"], r["wall_s"],
+                     " ".join(str(int(i)) for i in r["path"]) if r.get("path") else ""))
     print("\n  best of seeds (equal total budget):")
     if aco:
         Ja_best = min(v["J"] for v in aco.values() if v["J"] is not None)
@@ -314,7 +315,7 @@ def main():
             print(line)
 
     with open("baseline_search_%s.csv" % case, "w") as f:
-        f.write("control,seed,fem,J_control,J_aco,ratio_control_over_aco,n_admissible,n_tried,wall_s\n")
+        f.write("control,seed,fem,J_control,J_aco,ratio_control_over_aco,n_admissible,n_tried,wall_s,path_ids\n")
         for row in rows:
             f.write(",".join("" if v is None else ("%.6e" % v if isinstance(v, float) else str(v)) for v in row) + "\n")
 
@@ -339,7 +340,7 @@ def main():
                         alpha=0.85, label=("%s control" % c) if first else None)
                 first = False
     ax.set_yscale("log"); ax.set_xlabel("finite-element evaluations"); ax.set_ylabel(r"best-so-far objective  [W$\cdot$Hz]")
-    # no in-figure title: the manuscript caption describes the panel
+    ax.set_title("Search-level controls at equal FEM budget: %s" % case)
     ax.grid(True, which="both", ls=":", alpha=0.5); ax.legend(frameon=False)
     fig.tight_layout(); fig.savefig("baseline_search_%s.png" % case, dpi=150); fig.savefig("baseline_search_%s.pdf" % case)
     print("\nSaved: baseline_search_%s.csv, baseline_search_%s.png/.pdf" % (case, case))

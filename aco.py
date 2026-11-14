@@ -41,7 +41,36 @@ gamma * S * dG(x, B) / D0). At gamma = 1 the test takes the normalized form
 
     l / Lmax + dG(x, B) / D0 <= 1,
 
-a uniform rationing of the detour budget along the route. 
+a uniform rationing of the detour budget along the route. Using dG rather than
+the straight-line distance matters in obstacle domains (baffles, keep-outs):
+detours *forced* by the geometry are part of D0, not of S, so they are never
+charged against the discretionary slack. This yields a guarantee: along any
+graph-shortest route l = D0 - dG(x, B) at every node, so the test reduces to
+l + dG <= D0 + gamma * S * dG / D0 <= Lmax, and every graph-shortest route
+satisfies the length rule for all gamma <= 1 in any domain. The guarantee
+concerns the length rule alone: a geodesic route may still be excluded by the
+turn-angle pre-filter, and the stochastic constructor is not guaranteed to
+sample it within a finite operation budget. (With the straight-line bound in the
+reserve, the guarantee would hold only where the straight route is feasible; in
+a serpentine domain high gamma would then over-prune.) The mechanism is
+analogous to weighted A*: gamma = 0 keeps an exact lower bound (complete
+construction, biased turn distribution), gamma > 0 trades constructive
+completeness for a balanced turn distribution. Note the deliberate asymmetry at
+gamma = 0: the formula above with gamma = 0 would use the geodesic bound, which
+is slightly tighter than the straight-line one (dG >= d always, since the
+lattice metric dominates the Euclidean distance); for exact backward
+compatibility the implementation treats gamma = 0 as a special case and keeps
+the straight-line test, so the admissible set has a small discontinuity between
+gamma = 0 and gamma -> 0+. The reserve vanishes at the target (dG(B, B) = 0),
+so every constructed route still satisfies the true bound l <= Lmax and the
+exact as-built feasibility check on the spline is unchanged; only the set of
+routes the construction can produce shrinks monotonically with gamma, excluding
+routes whose discretionary detour is strongly front-loaded. The geodesic field
+dG(., B) is one Dijkstra sweep per optimize() call (grid.distances_from),
+shared by all ants; it also prunes, at no extra cost, any pocket of the FULL
+lattice from which B is unreachable within the remaining budget. Dead ends
+created dynamically by the tabu list are not captured by this static field and
+are still resolved by backtracking.
 """
 
 import numpy as np
@@ -334,7 +363,7 @@ def default_params():
     return {
         "alpha": 1.0,            # exponent of the pheromone field tau in the transition rule
         "q0": 0.7,               # exploitation probability (slide value)
-        "q0_iters": None,        # iterations of the q0 schedule, the exploration window T_q (None: max_iter). Fixing it
+        "q0_iters": None,        # iterations over which q0_anneal runs (None: max_iter). Fixing it
                                  # decouples the exploration schedule from the iteration budget, so
                                  # a longer max_iter does not stretch the exploratory phase.
         "improve_tol": 1e-2,     # relative gain on the incumbent that counts as progress
@@ -357,12 +386,12 @@ def default_params():
         "tau_bounds": None,      # (tau_min, tau_max) Max-Min Ant System clamping
         "stagnation_reset": 0,   # re-init pheromone after N stale iters (0 off)
         "kick_concentration": 3.0,
-        "stagnation_smooth": 1.0,# restart intensity on stagnation: 1.0 = full reset to tau_max, <1 = gentle smoothing
+        "stagnation_smooth": 1.0,# kick intensity on stagnation: 1.0 = full reset to tau_max, <1 = gentle smoothing
         "global_evaporation": True,  # evaporate on every admissible edge, not only on the
                                      # edges that happen to carry a deposit already
-        "q0_rewind_on_kick": False,  # rewind the q0 schedule after a stagnation restart, so the
+        "q0_rewind_on_kick": False,  # restart the q0 anneal after a stagnation kick, so the
                                      # re-diversified pheromone is explored at low q0 instead of
-                                     # exploited greedily at the final (high) q0. Off by
+                                     # exploited greedily at the annealed (high) q0. Off by
                                      # default to leave existing runs bit-identical.
         "bidirectional": 0.0,    # fraction of each iteration's ants that construct their
                                  # route from B toward A (0 = all from A, 0.5 = half). A
@@ -394,12 +423,12 @@ def default_params():
 def auto_params(grid, overrides=None, verbose=False):
     """Return ACO parameters scaled to the size of the lattice.
 
-    The search budget is tied to the exploration schedule. The q0 schedule lasts
+    The search budget is tied to the exploration schedule. The q0 ramp lasts
         T_q = clamp(5 h, 40, 120)   iterations,   h = mean(nx, ny, nz) - 1,
     where h is the number of hops in a direct route and therefore the number of
     decisions an ant makes per route. The stagnation window, the patience and
-    the iteration cap are derived from T_q so that the exploration window always ends before
-    the run can stop, every restart has half a window to re-converge before the
+    the iteration cap are derived from T_q so that the ramp always ends before
+    the run can stop, every restart has half a ramp to re-converge before the
     patience can trigger, and the cap is normally not reached. The dynamics
     parameters (alpha, rho, q0 range and Max-Min bounds) are size
     independent. The coefficient 5 reproduces T_q = 60 on the 13x13x13 lattice,
@@ -412,7 +441,7 @@ def auto_params(grid, overrides=None, verbose=False):
     params = {
         "n_ants":           clamp(2.8 * h, 12, 60),
         "q0_iters":         q0_iters,
-        "patience":         q0_iters,            # the exploration window ends before the run can stop
+        "patience":         q0_iters,            # the ramp ends before the run can stop
         "stagnation_reset": q0_iters // 2,       # patience = 2 x stall window
         "max_iter":         4 * q0_iters,        # safety cap, normally not reached
         "stagnation_smooth": 1.0,
@@ -434,7 +463,7 @@ def auto_params(grid, overrides=None, verbose=False):
 
 
 def _q0_at(p, it):
-    """Scheduled exploitation probability at iteration `it`.
+    """Annealed exploitation probability at iteration `it`.
 
     q0 rises linearly from q0_anneal[0] to q0_anneal[1] over `q0_iters` iterations
     (max_iter when q0_iters is None) and stays at q0_anneal[1] afterwards, so the
@@ -498,7 +527,7 @@ def optimize(grid, adj, start_id, target_id, Lmax, objective_fn,
     best_hist, mean_hist, feasible_hist = [], [], []
     iter_best_hist = []   # lowest objective among the feasible ants of each iteration
     iter_log = []         # full per-iteration diagnostic breakdown (also written to log_path)
-    reset_iters = []      # iterations at which a stagnation restart re-diversified the colony
+    reset_iters = []      # iterations at which a stagnation kick re-diversified the colony
     initial_best_from_seed = False   # True when the warm-start seed sets the initial best
     fem_hist = []   # cumulative full-pipe FEM evaluations after each iteration
     snapshots = []
@@ -719,12 +748,12 @@ def optimize(grid, adj, start_id, target_id, Lmax, objective_fn,
         deposit_elitist(tau, best, p)
         _clamp(tau, p.get("tau_bounds"))
 
-        # stagnation restart (MAX-MIN Ant System): pull every trail toward tau_max.
+        # stagnation-triggered pheromone reset (MMAS): pull every trail toward tau_max.
         # Stagnation means the population has concentrated around an incumbent that no
         # longer improves, so four conditions are required: (i) no significant gain for
         # stagnation_reset iterations, (ii) at least stagnation_reset iterations since
-        # the last restart or the start, (iii) the exploration schedule has ended (during
-        # the exploration window the colony explores by design), and (iv) the feasible population
+        # the last kick or the start, (iii) the exploration schedule has ended (during
+        # the q0 ramp the colony explores by design), and (iv) the feasible population
         # is concentrated: the median objective of the iteration lies within
         # kick_concentration x the incumbent. Without (iv) a lucky early incumbent
         # would trigger a reset while the population is still descending toward it
@@ -747,7 +776,7 @@ def optimize(grid, adj, start_id, target_id, Lmax, objective_fn,
                 last_kick = it + 1
             if verbose:
                 how = "reset" if delta >= 1.0 else f"smoothing (delta={delta:.2f})"
-                print(f"  iter {it:3d} | stagnation restart #{n_stagnation}: {how} "
+                print(f"  iter {it:3d} | stagnation kick #{n_stagnation}: {how} "
                       f"after {no_improve} stale iters")
 
         if p["store_paths_every"] and (it % p["store_paths_every"] == 0):

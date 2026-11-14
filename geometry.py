@@ -44,7 +44,7 @@ DEFAULT_SMOOTH_RMS = None
 # curve. Set by the run scripts (TANGENT_CLAMP); None leaves the tangents free.
 END_TANGENTS = (None, None)
 # fit_spline(..., end_tangents="global") uses END_TANGENTS; end_tangents=None fits with
-# free tangents regardless (used for the baseline routes, whose dense point sets
+# free tangents regardless (used for the template baselines, whose dense point sets
 # would develop a kink if their millimetre-long end spans were clamped).
 
 

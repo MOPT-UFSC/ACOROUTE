@@ -136,6 +136,77 @@ def _worker(job):
     return seed, r, time.time() - t0
 
 
+def _save_campaign(script, seeds, results, combined, ns):
+    """Persist what the re-ranking and the reproducibility appendix need: every
+    distinct route each seed evaluated (lattice node ids) with its search objective,
+    the per-seed summaries, the winning route and the search model settings. Written
+    as campaign_<script stem>.json.gz next to the script; route_best_ids_<stem>.npy
+    holds the winning route alone."""
+    import gzip, json
+    import numpy as np
+    stem = os.path.splitext(os.path.basename(script))[0]
+    keys = ("ELEM", "SMOOTH", "HARMONIC_SOLVER", "MODAL_FCUT", "BANDS", "BAND_WEIGHTS",
+            "R_MIN", "MAX_TURN", "NODES", "BOX_SIZE", "LMAX_FACTOR", "EXIT_DIR_A",
+            "ARRIVE_DIR_B", "EXIT_CONE_DEG", "ARRIVE_CONE_DEG", "TANGENT_CLAMP",
+            "EXCLUDE_CENTER", "SELF_CLEARANCE", "RAY", "PRESCRIBED_DISP", "PRESCRIBED_MASK")
+    def _py(v):
+        if isinstance(v, np.ndarray):
+            return v.tolist()
+        if isinstance(v, (np.floating, np.integer)):
+            return v.item()
+        if isinstance(v, (list, tuple)):
+            return [_py(x) for x in v]
+        return v
+    settings = {k: _py(ns[k]) for k in keys if k in ns}
+    settings["Lmax"] = float(ns["Lmax"]); settings["sid"] = int(ns["sid"]); settings["tid"] = int(ns["tid"])
+    per_seed = {}
+    for s in seeds:
+        r = results[s]
+        per_seed[str(s)] = {
+            "best_power": r["best_power"], "best_length": r["best_length"],
+            "best_path": [int(i) for i in r["best_path"]] if r["best_path"] is not None else None,
+            "n_fem_calls": int(r["n_fem_calls"]), "n_iter": int(len(r["best_hist"])),
+            "n_stagnation_events": int(r["n_stagnation_events"]), "wall_s": float(r.get("wall_s", float("nan"))),
+            "best_hist": [float(x) for x in r["best_hist"]],
+            "cache": [[[int(i) for i in p], float(J)] for p, J in r["cache"].items()],
+        }
+    ms = combined["multistart"]
+    doc = {"script": os.path.basename(script), "seeds": [int(s) for s in seeds],
+           "winning_seed": int(ms["winning_seed"]), "best_power": combined["best_power"],
+           "best_path": [int(i) for i in combined["best_path"]],
+           "params": {k: _py(v) for k, v in combined["params"].items()
+                      if isinstance(v, (int, float, str, bool, list, tuple, type(None), np.ndarray))},
+           "settings": settings, "per_seed": per_seed,
+           "saved": time.strftime("%Y-%m-%dT%H:%M:%S")}
+    fname = "campaign_%s.json.gz" % stem
+    with gzip.open(fname, "wt", encoding="utf-8") as f:
+        json.dump(doc, f)
+    np.save("route_best_ids_%s.npy" % stem, np.asarray(combined["best_path"], int))
+    n_routes = sum(len(v["cache"]) for v in per_seed.values())
+    print("campaign: saved %s (%d evaluated routes over %d seeds) and route_best_ids_%s.npy"
+          % (fname, n_routes, len(seeds), stem), flush=True)
+
+
+def _save_template(script, ns):
+    """After the script's own post-processing: persist the deterministic template route
+    it selected (helix / serpentine / shortest admissible route) so that it can be
+    re-evaluated on the reference model by rerank_campaign.py."""
+    import json
+    import numpy as np
+    stem = os.path.splitext(os.path.basename(script))[0]
+    pts = ns.get("base_pts")
+    if pts is None:
+        return
+    doc = {"base_label": ns.get("base_label", "baseline"),
+           "base_pts": np.asarray(pts, float).tolist(),
+           "W_base_search_mesh": (float(ns["W_base"]) if "W_base" in ns else None),
+           "base_info": {k: (v.item() if hasattr(v, "item") else v) for k, v in (ns.get("base_info") or {}).items()}}
+    with open("template_%s.json" % stem, "w") as f:
+        json.dump(doc, f)
+    print("campaign: saved template_%s.json (%s)" % (stem, doc["base_label"]), flush=True)
+
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__); sys.exit(1)
@@ -168,9 +239,11 @@ def main():
     print("campaign: wall time %.0f s for %d seeds" % (time.time() - t0, len(seeds)))
 
     combined = A.combine_multistart([results[s] for s in seeds], seeds, verbose=True)
+    _save_campaign(script, seeds, results, combined, ns)
     ns[var] = combined
     # the rest of the script: report, per-seed table, convergence study, figures, ...
     exec(compile(tail, script + "[tail]", "exec"), ns)
+    _save_template(script, ns)
 
 
 if __name__ == "__main__":

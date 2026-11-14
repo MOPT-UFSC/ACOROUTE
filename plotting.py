@@ -202,7 +202,7 @@ def plot_convergence(result, fname, show=False):
     convergence signal), and the iteration mean (how much the colony still explores).
     All three carry NaN on iterations with no feasible ants; markers keep isolated
     feasible iterations visible where a plain line would vanish. Vertical dashed lines
-    mark stagnation restarts (the jumps in the iteration-best right after them are
+    mark stagnation kicks (the jumps in the iteration-best right after them are
     deliberate re-exploration, not instability). When the warm-start seed sets the
     initial best, a diamond labels it: a best-so-far line pinned well below the colony
     from iteration 1 then reads as "the seeded route was never beaten", which is a
@@ -245,7 +245,7 @@ def plot_convergence(result, fname, show=False):
         if axf is not None:
             axf.axvline(k, color="0.55", ls="--", lw=0.9, zorder=2)
     if resets:
-        ax.plot([], [], color="0.55", ls="--", lw=0.9, label="stagnation restart")
+        ax.plot([], [], color="0.55", ls="--", lw=0.9, label="stagnation kick")
 
     if mean.size == n and np.isfinite(mean).any():
         ax.plot(it, mean, "-", color="#9bb4c9", lw=1.0, marker=".", ms=3,
@@ -278,7 +278,7 @@ def plot_convergence(result, fname, show=False):
                 ha="center", fontsize=ANNOTATION_FS, color="0.35")
 
     ax.set_ylabel(r"band-integrated input power  [W$\cdot$Hz]")
-    # no in-figure title: the manuscript caption describes the panel
+    ax.set_title("Search history: objective per iteration")
     ax.grid(True, which="both", ls=":", alpha=0.5)
     ax.legend(frameon=False, fontsize=LEGEND_FS, loc="upper center",
               bbox_to_anchor=(0.5, -0.02), ncol=4, columnspacing=1.6,
@@ -403,7 +403,7 @@ def plot_spline(grid, waypoint_ids, tck, nodes, fname, start_id, target_id,
                 baseline_pts=None, baseline_label="baseline",
                 title=None, legend=True, show_nodes=False):
     """3D view of the optimized route: lattice polyline, as-built spline and
-    (optionally) the beam nodes and the baseline route."""
+    (optionally) the beam nodes and the template baseline."""
     import geometry as geo
     import matplotlib.patheffects as pe
     cmin = grid["coords"].min(0)
@@ -702,7 +702,7 @@ def plot_frf(grid, result, fname, mat, sec, band_hz, evaluate_spectrum,
     freqs = np.linspace(f_start, f_hi, 400)
     W = evaluate_spectrum(path_coords(grid, result["best_path"]), freqs)
     fig, ax = plt.subplots(figsize=(7.5, 4.2))
-    ax.semilogy(freqs, np.abs(W), color="#b3122c", lw=2.0, label="optimized route", zorder=4)
+    ax.semilogy(freqs, np.abs(W), color="#b3122c", lw=2.0, label="optimized path", zorder=4)
     if baseline_coords is not None:
         # the baseline may need its own evaluator (e.g. a spline fit with free end
         # tangents when the optimized route has prescribed exit/arrival directions)
@@ -715,7 +715,8 @@ def plot_frf(grid, result, fname, mat, sec, band_hz, evaluate_spectrum,
     ax.set_xlim(f_lo, f_hi)                      # always 0 to 10000 Hz
     ax.set_xlabel("frequency [Hz]")
     ax.set_ylabel(r"$W_\text{in}(f)$ [W]")
-    # no in-figure title: the manuscript caption describes the panel
+    ax.set_title("Input-power FRF: optimized pipe vs baseline"
+                 if baseline_coords is not None else "Input-power FRF of the optimized pipe")
     ax.grid(True, which="both", ls=":", alpha=0.5)
     ax.legend(frameon=False)
     _apply_manuscript_typography(ax)

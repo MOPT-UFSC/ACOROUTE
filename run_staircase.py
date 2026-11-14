@@ -131,8 +131,8 @@ N_SEED_ROUTES = 1
 # colonies, the best is kept, so quality can only match or improve; every seed holds
 # its own route cache, so its FEM count is the true cost of that run. (2) More seed corridors
 # (N_SEED_ROUTES above). (3) ACO_OVERRIDES={"q0_rewind_on_kick": True}: after a
-# stagnation restart the q0 schedule is rewound, so the re-diversified pheromone is genuinely
-# re-explored instead of exploited greedily; changes post-restart dynamics only.
+# stagnation kick the q0 anneal restarts, so the re-diversified pheromone is genuinely
+# re-explored instead of exploited greedily; changes post-kick dynamics only.
 # FITPACK spline smoothing. SMOOTH=0 interpolates every lattice waypoint. Positive
 # values preserve the endpoints but allow the fitted curve to deviate from internal
 # waypoints, which regularizes fine-grid zig-zags. On NODES=(12,8,12), for example,
@@ -395,7 +395,7 @@ if EXIT_DIR_A is not None or ARRIVE_DIR_B is not None:
 ms = r.get("multistart")
 if ms and len(ms["seeds"]) > 1:
     print("  per-seed results (reported route = seed %d):" % ms["winning_seed"])
-    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "restarts", "time[s]"))
+    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "kicks", "time[s]"))
     for s_, J_, F_, I_, K_, T_ in zip(ms["seeds"], ms["best_powers"], ms["fem_calls"], ms["n_iter"], ms["n_stagnation_events"], ms["wall_s"]):
         print("    %6d %14s %8d %6d %6d %8.0f" % (s_, ("%.4e" % J_) if J_ is not None else "none", F_, I_, K_, T_))
     print("    sum of the per-seed times: %.0f s (serial-equivalent); wall-clock above is what the run took"
@@ -523,7 +523,7 @@ base_pts, base_info = BL.serpentine_gap_baseline(grid["coords"][sid], grid["coor
                                                  grid["coords"].max(0), Lmax, R_MIN,
                                                  smooth=SMOOTH, verbose=True)
 if base_pts is not None and geo.END_TANGENTS != (None, None):
-    print("  NOTE: the baseline route keeps free end tangents (dense curve, fitted with end_tangents=None);"
+    print("  NOTE: the template baseline keeps free end tangents (dense curve, fitted with end_tangents=None);"
           " only the optimized route satisfies the prescribed exit/arrival directions.")
 if base_pts is not None:
     bn, be, _ = geo.resample_by_length(geo.fit_spline(base_pts, smooth=SMOOTH, end_tangents=None), ELEM)
@@ -542,10 +542,10 @@ else:
                        smooth=SMOOTH, boxes=keepout_boxes, show=SHOW)
 
 plot_staircase_route(grid, route, tck, "fig_staircase.png", sid, tid, keepout_boxes,
-                     r_min=R_achieved, r_pt=R_pt, show=SHOW, baseline_pts=base_pts, baseline_label="serpentine baseline")
+                     r_min=R_achieved, r_pt=R_pt, show=SHOW, baseline_pts=base_pts, baseline_label="serpentine template")
 
 plot_staircase_route(grid, route, tck, "fig_staircase_view2.png", sid, tid, keepout_boxes,
-                     r_min=R_achieved, r_pt=R_pt, show=SHOW, baseline_pts=base_pts, baseline_label="serpentine baseline", legend=False)
+                     r_min=R_achieved, r_pt=R_pt, show=SHOW, baseline_pts=base_pts, baseline_label="serpentine template", legend=False)
 
 print("Saved: fig_staircase_all_splines.png  (every tested route faint, best solid)")
 

@@ -214,7 +214,7 @@ def fig_sensitivity():
     ax.semilogy(freqs / 1e3, np.abs(W_poly) + 1e-30, color=C_POLY, lw=1.8, label="polyline")
     ax.semilogy(freqs / 1e3, np.abs(W_spl) + 1e-30, color=C_SPL, lw=1.8, label="same waypoints, as built spline")
     ax.set_xlabel("frequency [kHz]"); ax.set_ylabel(YL)
-    # no in-figure title: the manuscript caption describes the panel
+    ax.set_title("Geometry sensitivity: smoothing the polyline")
     ax.set_xlim(0, 12); ax.grid(True, which="both", ls=":", alpha=0.4); ax.legend(frameon=False, fontsize=8.5, loc="lower right")
     fig.tight_layout(); _save(fig, "fig_sensitivity_frf.pdf")
 

@@ -257,7 +257,7 @@ def serpentine_gap_baseline(A, B, boxes, gmin, gmax, Lmax, R_min,
                       % (L * 1e3, 100 * L / Lmax, R * 1e3, viol * 1e3))
             return pts, info
     if verbose:
-        print("  serpentine_gap_baseline: no feasible waypoint set found")
+        print("  serpentine_gap_baseline: no feasible template found")
     return None, {"length": None}
 
 

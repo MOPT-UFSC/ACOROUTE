@@ -157,7 +157,7 @@ R_MIN    = 0.008          # hard min bend radius [m] on the as-built spline (ben
 # --- search / multi-start ---------------------------------------------------
 RUN_PART1 = False         # PART 1 (polyline-objective demo) only feeds the sensitivity
                           # figure; skip it for result runs (halves the optimisation cost)
-SEEDS     = [3, 5, 7, 11, 13]  # independent ACO runs (multi-start protocol of the paper:
+SEEDS     = [11]# [3, 5, 7, 11, 13]  # independent ACO runs (multi-start protocol of the paper:
                           # N_s = 5 explicit seeds, best-of-seeds reported together with
                           # the min/median/max of the converged objectives). Accepted forms:
                           #   5        -> five runs, seeds 0..4
@@ -212,8 +212,8 @@ CAD_UNITS  = "MM"         # CAD systems expect millimetres; the code works in me
 # set automatically from the grid size, so adding nodes for a finer geometry
 # does not need manual retuning. Put entries in ACO_OVERRIDES to pin or tune any
 # parameter. For premature stagnation of the objective, the two relevant knobs:
-#   "stagnation_reset" : <int>    iters of no improvement that trigger a restart (smaller = react sooner)
-#   "stagnation_smooth": <0..1>   restart intensity: 1.0 = full reset of tau to tau_max, <1 = gentle pull toward tau_max
+#   "stagnation_reset" : <int>    iters of no improvement that trigger a kick (smaller = react sooner)
+#   "stagnation_smooth": <0..1>   kick strength: 1.0 = full restart, <1 = gentle pull toward tau_max
 # Lowering q0_anneal start or raising tau_bounds[0] also fights early convergence.
 # Performance and route-shape knobs (see aco.py for the full documentation):
 #   "n_eval_workers": "auto"  evaluate the iteration's routes in parallel processes
@@ -467,13 +467,13 @@ print(f"  routes rejected  : {r2['n_reject_length']} on spline length, "
       f"{r2['n_reject_radius']} on bend radius, "
       f"{r2['n_reject_keepout']} on keep-out")
 print(f"  search           : {r2['n_fem_calls']} FEM evals, "
-      f"{r2['n_stagnation_events']} stagnation restart(s)")
+      f"{r2['n_stagnation_events']} stagnation kick(s)")
 print(f"  search time      : {_time.time() - _t_search:.0f} s wall-clock for the whole search")
 
 ms = r2.get("multistart")
 if ms and len(ms["seeds"]) > 1:
     print("  per-seed results (reported route = seed %d):" % ms["winning_seed"])
-    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "restarts", "time[s]"))
+    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "kicks", "time[s]"))
     for s_, J_, F_, I_, K_, T_ in zip(ms["seeds"], ms["best_powers"], ms["fem_calls"], ms["n_iter"], ms["n_stagnation_events"], ms["wall_s"]):
         print("    %6d %14s %8d %6d %6d %8.0f" % (s_, ("%.4e" % J_) if J_ is not None else "none", F_, I_, K_, T_))
     print("    sum of the per-seed times: %.0f s (serial-equivalent); wall-clock above is what the run took"

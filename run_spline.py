@@ -41,13 +41,6 @@ CAD_UNITS  = "MM"         # CAD systems expect millimetres; the code works in me
 # and never have to keep them consistent by hand.
 BOX_SIZE = (0.300, 0.300, 0.300)   # box extents (Lx, Ly, Lz) [m]
 NODES    = (15, 15, 15)               # nodes per axis (nx, ny, nz); each >= 2
-# Box-domain cases of the paper (Table of case definitions), all with LMAX_FACTOR = 1.7:
-#   representative        NODES = (15,15,15)  BANDS = [(500, 1500)]             EXCLUDE_CENTER = False
-#   free cube, low band   NODES = (15,15,15)  BANDS = [(1000, 3000)]            EXCLUDE_CENTER = False
-#   free cube, mid band   NODES = (20,20,20)  BANDS = [(5000, 7000)]            EXCLUDE_CENTER = False
-#   free cube, high band  NODES = (23,23,23)  BANDS = [(6000, 10000)]           EXCLUDE_CENTER = False
-#   free cube, two bands  NODES = (21,21,21)  BANDS = [(1000, 2000), (6000, 8000)]  BAND_WEIGHTS = (5.0, 1.0)
-#   central box           NODES = (15,15,15)  BANDS = [(1000, 3000)]            EXCLUDE_CENTER = 0.5
 CONNECT  = 26                      # route directions per node: 6 (faces), 18 (+edges), 26 (+body diagonals)
 # examples:
 #   bigger box, same node count : BOX_SIZE = (0.40, 0.40, 0.40)               -> coarser grid
@@ -60,7 +53,7 @@ CONNECT  = 26                      # route directions per node: 6 (faces), 18 (+
 # each axis to remove, centered. None disables; a scalar applies to all axes.
 #   EXCLUDE_CENTER = 0.4              -> remove the central 40% cube
 #   EXCLUDE_CENTER = (0.5, 0.5, 0.2) -> a central slab
-EXCLUDE_CENTER  = False     # free cube; 0.5 reproduces the central-box case of the paper
+EXCLUDE_CENTER  = 0.5 #False
 # Removing nodes only stops waypoints inside the region; the smooth spline could
 # still clip its corner. With this on, routes whose spline enters the box are
 # also rejected (a true keep-out), tested cheaply before any FEM solve.
@@ -117,7 +110,7 @@ E = 210e9; nu = 0.3; rho = 7850.0   # Young [Pa], Poisson [-], density [kg/m^3]
 # --- excitation and evaluation ----------------------------------------------
 # One or several target bands to minimise: a list of (lo, hi) tuples. A single
 # band is just a one-element list, e.g. BANDS = [(6000.0, 10000.0)].
-BANDS = [(500.0, 1500.0)]   # [Hz]; representative case of the paper
+BANDS = [(1000, 3000.0)]    # [Hz]
 # One weight per band, that YOU set. The objective is the weighted sum of the
 # per-band input-power integrals: sum_k BAND_WEIGHTS[k] * integral_over_band_k.
 # Bands at different frequencies carry very different raw power, so these weights
@@ -201,8 +194,8 @@ SHOW = True               # open the final 3D shape in an interactive window you
 # set automatically from the grid size, so adding nodes for a finer geometry
 # does not need manual retuning. Put entries in ACO_OVERRIDES to pin or tune any
 # parameter. For premature stagnation of the objective, the two relevant knobs:
-#   "stagnation_reset" : <int>    iters of no improvement that trigger a restart (smaller = react sooner)
-#   "stagnation_smooth": <0..1>   restart intensity: 1.0 = full reset of tau to tau_max, <1 = gentle pull toward tau_max
+#   "stagnation_reset" : <int>    iters of no improvement that trigger a kick (smaller = react sooner)
+#   "stagnation_smooth": <0..1>   kick strength: 1.0 = full restart, <1 = gentle pull toward tau_max
 # Lowering q0_anneal start or raising tau_bounds[0] also fights early convergence.
 # Performance and route-shape knobs (see aco.py for the full documentation):
 #   "n_eval_workers": "auto"  evaluate the iteration's routes in parallel processes
@@ -408,7 +401,7 @@ print(f"  routes rejected  : {r2['n_reject_length']} on spline length, "
       f"{r2['n_reject_radius']} on bend radius, "
       f"{r2['n_reject_keepout']} on keep-out")
 print(f"  search           : {r2['n_fem_calls']} FEM evals, "
-      f"{r2['n_stagnation_events']} stagnation restart(s)")
+      f"{r2['n_stagnation_events']} stagnation kick(s)")
 print(f"  search time      : {_time.time() - _t_search:.0f} s wall-clock for the whole search")
 if EXIT_DIR_A is not None or ARRIVE_DIR_B is not None:
     from scipy.interpolate import splev as _splev
@@ -426,7 +419,7 @@ if EXIT_DIR_A is not None or ARRIVE_DIR_B is not None:
 ms = r2.get("multistart")
 if ms and len(ms["seeds"]) > 1:
     print("  per-seed results (reported route = seed %d):" % ms["winning_seed"])
-    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "restarts", "time[s]"))
+    print("    %6s %14s %8s %6s %6s %8s" % ("seed", "J", "FEM", "iters", "kicks", "time[s]"))
     for s_, J_, F_, I_, K_, T_ in zip(ms["seeds"], ms["best_powers"], ms["fem_calls"], ms["n_iter"], ms["n_stagnation_events"], ms["wall_s"]):
         print("    %6d %14s %8d %6d %6d %8.0f" % (s_, ("%.4e" % J_) if J_ is not None else "none", F_, I_, K_, T_))
     print("    sum of the per-seed times: %.0f s (serial-equivalent); wall-clock above is what the run took"
@@ -512,7 +505,7 @@ base_pts, base_info = BL.helix_baseline(grid["coords"][sid], grid["coords"][tid]
                                         grid["coords"].min(0), grid["coords"].max(0),
                                         boxes=base_boxes, verbose=True)
 if base_pts is not None and geo.END_TANGENTS != (None, None):
-    print("  NOTE: the baseline route keeps free end tangents (dense curve, fitted with end_tangents=None);"
+    print("  NOTE: the template baseline keeps free end tangents (dense curve, fitted with end_tangents=None);"
           " only the optimized route satisfies the prescribed exit/arrival directions.")
     
 if base_pts is not None:
@@ -530,7 +523,7 @@ P.plot_spline(grid, route, tck, nodes, "fig_spline_manufacturable.png", sid, tid
               show=SHOW, keepout=keepout_box, baseline_pts=base_pts, baseline_label="helix baseline")
 
 P.plot_spline(grid, route, tck, nodes, "fig_spline_manufacturable_view2.png", sid, tid, R_achieved, R_pt,
-              show=SHOW, keepout=keepout_box, baseline_pts=base_pts, baseline_label="helix baseline", legend=False)
+              show=SHOW, keepout=keepout_box, baseline_pts=base_pts, baseline_label="helix template", legend=False)
 
 P.plot_all_splines(grid, r2["evaluated_paths"], route, "fig_all_splines.png", sid, tid,
                    smooth=SMOOTH, boxes=([keepout_box] if keepout_box is not None else None),
