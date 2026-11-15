@@ -13,6 +13,11 @@ skipped, so the command can be re-issued after an interruption (--force redoes i
     python run_revision.py all --no-random       # skip the random controls
     python run_revision.py all --dry             # only write the case scripts
     python run_revision.py all --check           # only the preflight check
+    python run_revision.py all --no-checks       # skip revision_checks.py after each case
+
+After each case, revision_checks.py is run on its results (seed winners, random controls,
+frequency quadrature and clearances of the reported route; output in revision_checks/).
+For cases already complete, run it directly: python revision_checks.py all
 
 Cases (names are the file stems used throughout):
     rep_05_15        free cube, 15^3, 0.5-1.5 kHz   (representative case; random control on all 5 seeds)
@@ -51,6 +56,7 @@ REQUIRED = {
     "run_campaign.py": "_save_campaign",      # persistence patch applied
     "baseline_search.py": "path_ids",         # control routes written to the csv
     "rerank_campaign.py": "ranking stability",
+    "revision_checks.py": "def reported_route",
     "altobjective.py": "def modes_in_band",
     "aco.py": "def optimize_multistart", "grid.py": "def build_grid", "geometry.py": "def fit_spline",
     "fem_beam3d.py": "def band_integrated_power", "baseline_routes.py": "def helix",
@@ -161,6 +167,9 @@ def main():
             if f not in before or os.path.getmtime(f) > before[f]:
                 shutil.move(f, os.path.join(outdir, f))
         shutil.copy(fname, os.path.join(outdir, fname))
+        if rc == 0 and not flags.get("modes") and "--no-checks" not in opts:
+            # seed winners, controls, quadrature and clearances of the reported route (revision_checks/)
+            run([sys.executable, "revision_checks.py", case, flags.get("fine_mm", FINE_MM)], log)
         print("=== %s done in %.0f min; results in %s" % (case, (time.time() - t0) / 60, outdir), flush=True)
     print("\nall done: zip the folder revision_results/ and send it.")
 

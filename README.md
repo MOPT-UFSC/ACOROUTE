@@ -31,7 +31,7 @@ The objective is non-additive and is available only after a complete geometric a
 | Run the spherical domain with keep-out and end cones | [`run_sphere.py`](run_sphere.py) |
 | Run the multi-start seeds of any case in parallel | [`run_campaign.py`](run_campaign.py) |
 | Rerun all campaigns, random controls and re-evaluations of the revised manuscript | [`run_revision.py`](run_revision.py) |
-| Check seed winners, random controls, frequency quadrature and clearances of a campaign | [`revision_checks.py`](revision_checks.py) |
+| Check seed winners, random controls, frequency quadrature and clearances of the reported route of each case (`python revision_checks.py all`; outputs in [`revision_checks/`](revision_checks/)) | [`revision_checks.py`](revision_checks.py) |
 | Reproduce the verification of the beam model against Ansys BEAM188 | [`ansys_validation/`](ansys_validation/README.md) |
 | Match code names to paper symbols | [`docs/CODE_TO_PAPER.md`](docs/CODE_TO_PAPER.md) |
 | Understand and tune every ACO parameter | [`docs/ACO_PARAMETERS.md`](docs/ACO_PARAMETERS.md) |
