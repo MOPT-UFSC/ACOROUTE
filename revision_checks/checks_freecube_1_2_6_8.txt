@@ -1,0 +1,18 @@
+additional checks, freecube_1_2_6_8, reference model: direct solver on the 2 mm mesh
+reported route: search winner, which is also the reference winner
+A. seed winners (reported route: J_ref = 4.4003e+00)
+   seed  7: J_search 4.4098e+00, 11174 analyses, among the re-evaluated candidates, J_ref 4.4003e+00 (x1.000 the reported route)
+   seed  3: J_search 4.6063e+00, 11387 analyses, among the re-evaluated candidates, J_ref 4.6473e+00 (x1.056 the reported route)
+   seed  5: J_search 5.2557e+00, 13977 analyses, NOT among the re-evaluated candidates, J_ref 5.3027e+00 (x1.205 the reported route)
+   seed 13: J_search 7.8379e+00, 10284 analyses, NOT among the re-evaluated candidates, J_ref 7.8885e+00 (x1.793 the reported route)
+   seed 11: J_search 7.8626e+00, 10846 analyses, NOT among the re-evaluated candidates, J_ref 7.9662e+00 (x1.810 the reported route)
+B. random controls (the five ACO runs together: 57668 analyses)
+   control of seed  7: 11174 analyses, J_search 9.3103e+00, J_ref 9.2662e+00; seeds with a lower J_ref: 5 of 5; ratio control/seed: min 1.16, median 1.75, max 2.11
+C. frequency quadrature, relative to the fine uniform grid (step 0.126, 0.500 Hz); points: {'adaptive': 561, 'dense': 1511, 'dense2': 8371, 'uniform05': 6002, 'uniform_fine': 11960}
+   reported route: adaptive +0.19%, dense +0.03%, dense2 +0.00%, uniform05 +0.00%
+   best control (seed 7): adaptive +0.33%, dense +0.04%, dense2 +0.00%, uniform05 +0.00%
+   ratio control/reported: adaptive 2.106, converged 2.103
+D. centreline clearances of the reported route (pipe outer radius 1.575 mm; free run excludes 20 mm at each terminal)
+   domain: minimum -2.28 mm at s = 166.4 mm (at A +0.00, at B +0.00); free run -2.28 mm at s = 166.4 mm, pipe surface -3.85 mm
+E. geometric margins of the reported route (sampling of rerank_campaign.py)
+   domain_centreline_min_mm -2.28, domain_excursion_mm +2.28, domain_tolerance_mm +7.50, self_clearance_surface_mm +20.44, length_mm +829.19, min_bend_radius_mm +14.37, straight_A_mm +0.59, straight_B_mm +0.94

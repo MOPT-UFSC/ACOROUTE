@@ -1,0 +1,18 @@
+additional checks, freecube_5_7, reference model: direct solver on the 2 mm mesh
+reported route: search winner
+A. seed winners (reported route: J_ref = 4.2378e-01)
+   seed  5: J_search 3.9661e-01, 12661 analyses, among the re-evaluated candidates, J_ref 4.2378e-01 (x1.000 the reported route)
+   seed 11: J_search 4.2508e-01,  9266 analyses, NOT among the re-evaluated candidates, J_ref 4.3379e-01 (x1.024 the reported route)
+   seed 13: J_search 5.4616e-01,  8903 analyses, NOT among the re-evaluated candidates, J_ref 5.9966e-01 (x1.415 the reported route)
+   seed  3: J_search 6.4042e-01, 11817 analyses, NOT among the re-evaluated candidates, J_ref 6.8996e-01 (x1.628 the reported route)
+   seed  7: J_search 6.8133e-01,  8318 analyses, NOT among the re-evaluated candidates, J_ref 7.0829e-01 (x1.671 the reported route)
+B. random controls (the five ACO runs together: 50965 analyses)
+   control of seed  5: 12661 analyses, J_search 6.4367e-01, J_ref 6.2320e-01; seeds with a lower J_ref: 3 of 5; ratio control/seed: min 0.88, median 1.04, max 1.47
+C. frequency quadrature, relative to the fine uniform grid (step 0.500 Hz); points: {'adaptive': 221, 'dense': 617, 'dense2': 3754, 'uniform05': 4001, 'uniform_fine': 4001}
+   reported route: adaptive +0.00%, dense -0.00%, dense2 -0.00%, uniform05 +0.00%
+   best control (seed 5): adaptive +0.01%, dense -0.01%, dense2 +0.00%, uniform05 +0.00%
+   ratio control/reported: adaptive 1.471, converged 1.470
+D. centreline clearances of the reported route (pipe outer radius 1.575 mm; free run excludes 20 mm at each terminal)
+   domain: minimum -2.55 mm at s = 31.7 mm (at A +0.00, at B +0.00); free run -2.55 mm at s = 31.7 mm, pipe surface -4.13 mm
+E. geometric margins of the reported route (sampling of rerank_campaign.py)
+   domain_centreline_min_mm -2.55, domain_excursion_mm +2.55, domain_tolerance_mm +7.89, self_clearance_surface_mm +18.40, length_mm +840.98, min_bend_radius_mm +8.04, straight_A_mm +2.19, straight_B_mm +0.72

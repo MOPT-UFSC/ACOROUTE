@@ -1,0 +1,146 @@
+{
+ "case": "freecube_5_7",
+ "h_ref_mm": 2.0,
+ "reported_route": "search winner",
+ "reported_path_ids": [
+  0,
+  1,
+  2,
+  3,
+  404,
+  804,
+  1205,
+  1605,
+  2004,
+  2404,
+  2804,
+  3224,
+  3645,
+  4066,
+  4087,
+  4088,
+  4089,
+  4110,
+  4111,
+  4512,
+  4933,
+  5353,
+  5753,
+  6152,
+  6552,
+  6953,
+  6954,
+  7355,
+  7756,
+  7757,
+  7358,
+  6979,
+  6599,
+  6619,
+  7039,
+  7439,
+  7859,
+  7879,
+  7899,
+  7919,
+  7939,
+  7958,
+  7978,
+  7999
+ ],
+ "seeds": [
+  {
+   "seed": 5,
+   "J_search": 0.3966083285169206,
+   "n_fem": 12661,
+   "in_top": true,
+   "J_ref": 0.4237832
+  },
+  {
+   "seed": 11,
+   "J_search": 0.42508072701477995,
+   "n_fem": 9266,
+   "in_top": false,
+   "J_ref": 0.4337885549224458
+  },
+  {
+   "seed": 13,
+   "J_search": 0.5461644764506696,
+   "n_fem": 8903,
+   "in_top": false,
+   "J_ref": 0.5996610310355361
+  },
+  {
+   "seed": 3,
+   "J_search": 0.6404191810189925,
+   "n_fem": 11817,
+   "in_top": false,
+   "J_ref": 0.6899591346387441
+  },
+  {
+   "seed": 7,
+   "J_search": 0.6813260908197831,
+   "n_fem": 8318,
+   "in_top": false,
+   "J_ref": 0.7082868488760394
+  }
+ ],
+ "J_ref_reported": 0.4237832,
+ "controls": [
+  {
+   "seed": 5,
+   "n_fem": 12661,
+   "J_search": 0.6436664,
+   "J_ref": 0.6232043955679961
+  }
+ ],
+ "quadrature_reported": {
+  "adaptive": 0.4237831749856495,
+  "dense": 0.4237750655736513,
+  "dense2": 0.42377689541954344,
+  "uniform05": 0.4237773086085661,
+  "uniform_fine": 0.4237773086085661
+ },
+ "quadrature_points": {
+  "adaptive": 221,
+  "dense": 617,
+  "dense2": 3754,
+  "uniform05": 4001,
+  "uniform_fine": 4001
+ },
+ "uniform_fine_step_hz": [
+  0.5
+ ],
+ "quadrature_control": {
+  "adaptive": 0.6232043955679961,
+  "dense": 0.6230825483703402,
+  "dense2": 0.6231172680737636,
+  "uniform05": 0.6231154188070849,
+  "uniform_fine": 0.6231154188070849
+ },
+ "quadrature_control_seed": 5,
+ "clearances": {
+  "outer_radius_mm": 1.575,
+  "length_mm": 840.9787019095644,
+  "cut_end_mm": 20.0,
+  "domain": {
+   "min_mm": -2.5546412248065353,
+   "at_s_mm": 31.665756686583446,
+   "at_A_mm": 0.0,
+   "at_B_mm": 0.0,
+   "free_run_min_mm": -2.5546412248065353,
+   "free_run_at_s_mm": 31.665756686583446,
+   "free_run_surface_mm": -4.1296412248065355
+  }
+ },
+ "margins": {
+  "domain_centreline_min_mm": -2.5546379214060155,
+  "domain_excursion_mm": 2.5546379214060155,
+  "domain_tolerance_mm": 7.894736842105264,
+  "self_clearance_surface_mm": 18.398070639080842,
+  "length_mm": 840.9768827972016,
+  "min_bend_radius_mm": 8.040532242096983,
+  "straight_A_mm": 2.188810657805695,
+  "straight_B_mm": 0.7187935691367331
+ }
+}

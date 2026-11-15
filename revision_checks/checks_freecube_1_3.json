@@ -1,0 +1,135 @@
+{
+ "case": "freecube_1_3",
+ "h_ref_mm": 2.0,
+ "reported_route": "search winner, which is also the reference winner",
+ "reported_path_ids": [
+  0,
+  1,
+  2,
+  18,
+  19,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  26,
+  42,
+  283,
+  523,
+  748,
+  987,
+  1002,
+  1018,
+  1034,
+  1049,
+  1064,
+  1304,
+  1544,
+  1769,
+  2009,
+  2234,
+  2458,
+  2667,
+  2892,
+  3117,
+  3358,
+  3374
+ ],
+ "seeds": [
+  {
+   "seed": 13,
+   "J_search": 0.03703729237261489,
+   "n_fem": 6494,
+   "in_top": true,
+   "J_ref": 0.0374061
+  },
+  {
+   "seed": 3,
+   "J_search": 0.04177280330591859,
+   "n_fem": 4425,
+   "in_top": true,
+   "J_ref": 0.04283298
+  },
+  {
+   "seed": 7,
+   "J_search": 0.05135048768287906,
+   "n_fem": 7480,
+   "in_top": false,
+   "J_ref": 0.05108060817214994
+  },
+  {
+   "seed": 11,
+   "J_search": 0.052365304009024054,
+   "n_fem": 9043,
+   "in_top": false,
+   "J_ref": 0.054013441126478
+  },
+  {
+   "seed": 5,
+   "J_search": 0.08124992063066036,
+   "n_fem": 4186,
+   "in_top": false,
+   "J_ref": 0.08218750080106171
+  }
+ ],
+ "J_ref_reported": 0.0374061,
+ "controls": [
+  {
+   "seed": 13,
+   "n_fem": 6494,
+   "J_search": 0.1939082,
+   "J_ref": 0.1933494928038239
+  }
+ ],
+ "quadrature_reported": {
+  "adaptive": 0.037406101183715866,
+  "dense": 0.03701594864845142,
+  "dense2": 0.036901136772418804,
+  "uniform05": 0.036899523887406624,
+  "uniform_fine": 0.03689891771936363
+ },
+ "quadrature_points": {
+  "adaptive": 493,
+  "dense": 1391,
+  "dense2": 8016,
+  "uniform05": 4001,
+  "uniform_fine": 15916
+ },
+ "uniform_fine_step_hz": [
+  0.12566370614359174
+ ],
+ "quadrature_control": {
+  "adaptive": 0.1933494928038239,
+  "dense": 0.1902900103765074,
+  "dense2": 0.18968788318670654,
+  "uniform05": 0.18967464550556412,
+  "uniform_fine": 0.18967922762314138
+ },
+ "quadrature_control_seed": 13,
+ "clearances": {
+  "outer_radius_mm": 1.575,
+  "length_mm": 855.3690752869543,
+  "cut_end_mm": 20.0,
+  "domain": {
+   "min_mm": -3.493138163444651,
+   "at_s_mm": 30.508720886570586,
+   "at_A_mm": 0.0,
+   "at_B_mm": 0.0,
+   "free_run_min_mm": -3.493138163444651,
+   "free_run_at_s_mm": 30.508720886570586,
+   "free_run_surface_mm": -5.068138163444651
+  }
+ },
+ "margins": {
+  "domain_centreline_min_mm": -3.4931407010729356,
+  "domain_excursion_mm": 3.4931407010729356,
+  "domain_tolerance_mm": 10.714285714285714,
+  "self_clearance_surface_mm": 20.436952451998252,
+  "length_mm": 855.3679692907815,
+  "min_bend_radius_mm": 13.731195460873526,
+  "straight_A_mm": 1.4227354136672168,
+  "straight_B_mm": 1.0930782691451757
+ }
+}

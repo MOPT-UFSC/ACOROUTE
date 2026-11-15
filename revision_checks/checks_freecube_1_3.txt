@@ -1,0 +1,18 @@
+additional checks, freecube_1_3, reference model: direct solver on the 2 mm mesh
+reported route: search winner, which is also the reference winner
+A. seed winners (reported route: J_ref = 3.7406e-02)
+   seed 13: J_search 3.7037e-02,  6494 analyses, among the re-evaluated candidates, J_ref 3.7406e-02 (x1.000 the reported route)
+   seed  3: J_search 4.1773e-02,  4425 analyses, among the re-evaluated candidates, J_ref 4.2833e-02 (x1.145 the reported route)
+   seed  7: J_search 5.1350e-02,  7480 analyses, NOT among the re-evaluated candidates, J_ref 5.1081e-02 (x1.366 the reported route)
+   seed 11: J_search 5.2365e-02,  9043 analyses, NOT among the re-evaluated candidates, J_ref 5.4013e-02 (x1.444 the reported route)
+   seed  5: J_search 8.1250e-02,  4186 analyses, NOT among the re-evaluated candidates, J_ref 8.2188e-02 (x2.197 the reported route)
+B. random controls (the five ACO runs together: 31628 analyses)
+   control of seed 13:  6494 analyses, J_search 1.9391e-01, J_ref 1.9335e-01; seeds with a lower J_ref: 5 of 5; ratio control/seed: min 2.35, median 3.79, max 5.17
+C. frequency quadrature, relative to the fine uniform grid (step 0.126 Hz); points: {'adaptive': 493, 'dense': 1391, 'dense2': 8016, 'uniform05': 4001, 'uniform_fine': 15916}
+   reported route: adaptive +1.37%, dense +0.32%, dense2 +0.01%, uniform05 +0.00%
+   best control (seed 13): adaptive +1.93%, dense +0.32%, dense2 +0.00%, uniform05 -0.00%
+   ratio control/reported: adaptive 5.169, converged 5.141
+D. centreline clearances of the reported route (pipe outer radius 1.575 mm; free run excludes 20 mm at each terminal)
+   domain: minimum -3.49 mm at s = 30.5 mm (at A +0.00, at B +0.00); free run -3.49 mm at s = 30.5 mm, pipe surface -5.07 mm
+E. geometric margins of the reported route (sampling of rerank_campaign.py)
+   domain_centreline_min_mm -3.49, domain_excursion_mm +3.49, domain_tolerance_mm +10.71, self_clearance_surface_mm +20.44, length_mm +855.37, min_bend_radius_mm +13.73, straight_A_mm +1.42, straight_B_mm +1.09

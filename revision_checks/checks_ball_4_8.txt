@@ -1,0 +1,19 @@
+additional checks, ball_4_8, reference model: direct solver on the 1 mm mesh
+reported route: reference winner
+A. seed winners (reported route: J_ref = 1.9438e-01)
+   seed 11: J_search 1.5564e-01,  4507 analyses, among the re-evaluated candidates, J_ref 2.1197e-01 (x1.090 the reported route)
+   seed  7: J_search 1.5701e-01,  2940 analyses, among the re-evaluated candidates, J_ref 2.1019e-01 (x1.081 the reported route)
+   seed  3: J_search 1.5701e-01,  2908 analyses, among the re-evaluated candidates, J_ref 2.1019e-01 (x1.081 the reported route)
+   seed  5: J_search 1.8231e-01,  2734 analyses, among the re-evaluated candidates, J_ref 2.2691e-01 (x1.167 the reported route)
+   seed 13: J_search 2.0042e-01,  2890 analyses, NOT among the re-evaluated candidates, J_ref 2.0444e-01 (x1.052 the reported route)
+B. random controls (the five ACO runs together: 15979 analyses)
+   control of seed 11:  4507 analyses, J_search 3.1994e-01, J_ref 3.8531e-01; seeds with a lower J_ref: 5 of 5; ratio control/seed: min 1.70, median 1.83, max 1.88
+C. frequency quadrature, relative to the fine uniform grid (step 0.500 Hz); points: {'adaptive': 395, 'dense': 1130, 'dense2': 6415, 'uniform05': 8001, 'uniform_fine': 8001}
+   reported route: adaptive +0.02%, dense -0.00%, dense2 +0.00%, uniform05 +0.00%
+   best control (seed 11): adaptive +0.01%, dense -0.00%, dense2 -0.00%, uniform05 +0.00%
+   ratio control/reported: adaptive 1.982, converged 1.982
+D. centreline clearances of the reported route (pipe outer radius 1.575 mm; free run excludes 20 mm at each terminal)
+   domain: minimum +0.75 mm at s = 573.8 mm (at A +46.08, at B +0.75); free run +1.80 mm at s = 131.6 mm, pipe surface +0.23 mm
+   keepout_1: minimum +0.00 mm at s = 0.0 mm (at A +0.00, at B +49.75); free run +12.45 mm at s = 307.9 mm, pipe surface +10.88 mm
+E. geometric margins of the reported route (sampling of rerank_campaign.py)
+   domain_centreline_min_mm +0.75, domain_excursion_mm +0.00, domain_tolerance_mm +7.50, keepout_1_surface_mm -1.57, self_clearance_surface_mm +20.81, length_mm +573.77, min_bend_radius_mm +17.31, straight_A_mm +1.04, straight_B_mm +0.64

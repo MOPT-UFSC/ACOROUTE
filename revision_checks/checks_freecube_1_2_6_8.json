@@ -1,0 +1,140 @@
+{
+ "case": "freecube_1_2_6_8",
+ "h_ref_mm": 2.0,
+ "reported_route": "search winner, which is also the reference winner",
+ "reported_path_ids": [
+  0,
+  22,
+  44,
+  507,
+  529,
+  551,
+  573,
+  154,
+  176,
+  639,
+  661,
+  242,
+  264,
+  727,
+  1189,
+  1650,
+  2090,
+  2530,
+  2991,
+  3431,
+  3892,
+  4354,
+  4816,
+  5279,
+  5721,
+  6142,
+  6562,
+  6983,
+  6963,
+  7384,
+  7826,
+  8289,
+  8731,
+  9194,
+  9216,
+  9238,
+  9260
+ ],
+ "seeds": [
+  {
+   "seed": 7,
+   "J_search": 4.409795652815065,
+   "n_fem": 11174,
+   "in_top": true,
+   "J_ref": 4.40027
+  },
+  {
+   "seed": 3,
+   "J_search": 4.6062807813704065,
+   "n_fem": 11387,
+   "in_top": true,
+   "J_ref": 4.647286
+  },
+  {
+   "seed": 5,
+   "J_search": 5.25572683948874,
+   "n_fem": 13977,
+   "in_top": false,
+   "J_ref": 5.3026781096885856
+  },
+  {
+   "seed": 13,
+   "J_search": 7.837866173337385,
+   "n_fem": 10284,
+   "in_top": false,
+   "J_ref": 7.888523155670901
+  },
+  {
+   "seed": 11,
+   "J_search": 7.862588273647773,
+   "n_fem": 10846,
+   "in_top": false,
+   "J_ref": 7.966190598329671
+  }
+ ],
+ "J_ref_reported": 4.40027,
+ "controls": [
+  {
+   "seed": 7,
+   "n_fem": 11174,
+   "J_search": 9.310335,
+   "J_ref": 9.266210698211438
+  }
+ ],
+ "quadrature_reported": {
+  "adaptive": 4.400270455539416,
+  "dense": 4.3934949471375875,
+  "dense2": 4.392161581291961,
+  "uniform05": 4.3921408129249055,
+  "uniform_fine": 4.392131628752682
+ },
+ "quadrature_points": {
+  "adaptive": 561,
+  "dense": 1511,
+  "dense2": 8371,
+  "uniform05": 6002,
+  "uniform_fine": 11960
+ },
+ "uniform_fine_step_hz": [
+  0.12566370614359174,
+  0.5
+ ],
+ "quadrature_control": {
+  "adaptive": 9.266210698211438,
+  "dense": 9.239742717516101,
+  "dense2": 9.235740896518351,
+  "uniform05": 9.235630783808293,
+  "uniform_fine": 9.235624774628226
+ },
+ "quadrature_control_seed": 7,
+ "clearances": {
+  "outer_radius_mm": 1.575,
+  "length_mm": 829.1880675059982,
+  "cut_end_mm": 20.0,
+  "domain": {
+   "min_mm": -2.27860506287973,
+   "at_s_mm": 166.39019818987353,
+   "at_A_mm": 0.0,
+   "at_B_mm": 5.551115123125783e-14,
+   "free_run_min_mm": -2.27860506287973,
+   "free_run_at_s_mm": 166.39019818987353,
+   "free_run_surface_mm": -3.85360506287973
+  }
+ },
+ "margins": {
+  "domain_centreline_min_mm": -2.2786053330464813,
+  "domain_excursion_mm": 2.2786053330464813,
+  "domain_tolerance_mm": 7.5,
+  "self_clearance_surface_mm": 20.44129326110376,
+  "length_mm": 829.187130718155,
+  "min_bend_radius_mm": 14.36526958428952,
+  "straight_A_mm": 0.5931407062352113,
+  "straight_B_mm": 0.9411402796039026
+ }
+}

@@ -1,0 +1,20 @@
+additional checks, stair_6_10, reference model: direct solver on the 2 mm mesh
+reported route: search winner, which is also the reference winner
+A. seed winners (reported route: J_ref = 1.3853e+01)
+   seed  5: J_search 1.4556e+01,  8880 analyses, among the re-evaluated candidates, J_ref 1.3853e+01 (x1.000 the reported route)
+   seed 11: J_search 1.5186e+01,  7029 analyses, among the re-evaluated candidates, J_ref 1.4626e+01 (x1.056 the reported route)
+   seed  3: J_search 1.5873e+01,  7071 analyses, NOT among the re-evaluated candidates, J_ref 1.4896e+01 (x1.075 the reported route)
+   seed  7: J_search 1.7937e+01,  9659 analyses, NOT among the re-evaluated candidates, J_ref 1.7182e+01 (x1.240 the reported route)
+   seed 13: J_search 1.7978e+01,  7370 analyses, NOT among the re-evaluated candidates, J_ref 1.7369e+01 (x1.254 the reported route)
+B. random controls (the five ACO runs together: 40009 analyses)
+   control of seed  5:  8880 analyses, J_search 2.6981e+01, J_ref 2.4842e+01; seeds with a lower J_ref: 5 of 5; ratio control/seed: min 1.43, median 1.67, max 1.79
+C. frequency quadrature, relative to the fine uniform grid (step 0.500 Hz); points: {'adaptive': 713, 'dense': 2033, 'dense2': 11552, 'uniform05': 8001, 'uniform_fine': 8001}
+   reported route: adaptive +0.02%, dense -0.00%, dense2 +0.00%, uniform05 +0.00%
+   best control (seed 5): adaptive +0.01%, dense -0.00%, dense2 -0.00%, uniform05 +0.00%
+   ratio control/reported: adaptive 1.793, converged 1.793
+D. centreline clearances of the reported route (pipe outer radius 1.575 mm; free run excludes 20 mm at each terminal)
+   domain: minimum -1.82 mm at s = 643.1 mm (at A +0.00, at B +0.00); free run -1.82 mm at s = 643.1 mm, pipe surface -3.40 mm
+   keepout_1: minimum +4.98 mm at s = 134.7 mm (at A +88.64, at B +236.39); free run +4.98 mm at s = 134.7 mm, pipe surface +3.40 mm
+   keepout_2: minimum +10.00 mm at s = 937.9 mm (at A +236.39, at B +88.64); free run +10.00 mm at s = 937.9 mm, pipe surface +8.43 mm
+E. geometric margins of the reported route (sampling of rerank_campaign.py)
+   domain_centreline_min_mm -1.82, domain_excursion_mm +1.82, domain_tolerance_mm +6.82, keepout_1_surface_mm +3.40, keepout_2_surface_mm +8.43, self_clearance_surface_mm +20.82, length_mm +1257.19, min_bend_radius_mm +13.05, straight_A_mm +0.70, straight_B_mm +0.92

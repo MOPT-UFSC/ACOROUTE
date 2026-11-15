@@ -1,0 +1,154 @@
+{
+ "case": "rep_05_15",
+ "h_ref_mm": 2.0,
+ "reported_route": "search winner, which is also the reference winner",
+ "reported_path_ids": [
+  0,
+  16,
+  17,
+  18,
+  229,
+  230,
+  21,
+  22,
+  233,
+  459,
+  700,
+  925,
+  1164,
+  1403,
+  1628,
+  1869,
+  1884,
+  2125,
+  2140,
+  2380,
+  2621,
+  2862,
+  2878,
+  2669,
+  2684,
+  2923,
+  3148,
+  3374
+ ],
+ "seeds": [
+  {
+   "seed": 5,
+   "J_search": 0.0008302808277697231,
+   "n_fem": 5931,
+   "in_top": true,
+   "J_ref": 0.0008776462
+  },
+  {
+   "seed": 7,
+   "J_search": 0.0009250331690109242,
+   "n_fem": 9098,
+   "in_top": true,
+   "J_ref": 0.0009592645
+  },
+  {
+   "seed": 11,
+   "J_search": 0.0010703454939369728,
+   "n_fem": 9238,
+   "in_top": false,
+   "J_ref": 0.0011029514669132017
+  },
+  {
+   "seed": 13,
+   "J_search": 0.0013522362507490773,
+   "n_fem": 4186,
+   "in_top": false,
+   "J_ref": 0.0013328637015052303
+  },
+  {
+   "seed": 3,
+   "J_search": 0.0032599680949220717,
+   "n_fem": 4998,
+   "in_top": false,
+   "J_ref": 0.0033745068824135157
+  }
+ ],
+ "J_ref_reported": 0.0008776462,
+ "controls": [
+  {
+   "seed": 3,
+   "n_fem": 4998,
+   "J_search": 0.007919584,
+   "J_ref": 0.008216767138539034
+  },
+  {
+   "seed": 5,
+   "n_fem": 5931,
+   "J_search": 0.005000999,
+   "J_ref": 0.004589804367997883
+  },
+  {
+   "seed": 7,
+   "n_fem": 9098,
+   "J_search": 0.00424399,
+   "J_ref": 0.0042149297313731834
+  },
+  {
+   "seed": 11,
+   "n_fem": 9238,
+   "J_search": 0.006121293,
+   "J_ref": 0.006068872842993724
+  },
+  {
+   "seed": 13,
+   "n_fem": 4186,
+   "J_search": 0.005964972,
+   "J_ref": 0.005752344310382618
+  }
+ ],
+ "quadrature_reported": {
+  "adaptive": 0.0008776461782141547,
+  "dense": 0.0008517037297887287,
+  "dense2": 0.000847253465553007,
+  "uniform05": 0.0008467865214112913,
+  "uniform_fine": 0.000847157595295071
+ },
+ "quadrature_points": {
+  "adaptive": 328,
+  "dense": 904,
+  "dense2": 5127,
+  "uniform05": 2001,
+  "uniform_fine": 31832
+ },
+ "uniform_fine_step_hz": [
+  0.031415926535897934
+ ],
+ "quadrature_control": {
+  "adaptive": 0.0042149297313731834,
+  "dense": 0.003928200370585089,
+  "dense2": 0.003883073151145189,
+  "uniform05": 0.0037551918186740966,
+  "uniform_fine": 0.003882452343983057
+ },
+ "quadrature_control_seed": 7,
+ "clearances": {
+  "outer_radius_mm": 1.575,
+  "length_mm": 812.7980790967017,
+  "cut_end_mm": 20.0,
+  "domain": {
+   "min_mm": -2.8368471915864335,
+   "at_s_mm": 245.05756664695267,
+   "at_A_mm": 0.0,
+   "at_B_mm": 0.0,
+   "free_run_min_mm": -2.8368471915864335,
+   "free_run_at_s_mm": 245.05756664695267,
+   "free_run_surface_mm": -4.411847191586434
+  }
+ },
+ "margins": {
+  "domain_centreline_min_mm": -2.8368450675652634,
+  "domain_excursion_mm": 2.8368450675652634,
+  "domain_tolerance_mm": 10.714285714285714,
+  "self_clearance_surface_mm": 19.798162682818393,
+  "length_mm": 812.7967453741552,
+  "min_bend_radius_mm": 12.469441940660737,
+  "straight_A_mm": 1.190464970557083,
+  "straight_B_mm": 2.272079972374663
+ }
+}

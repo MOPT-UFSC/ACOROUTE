@@ -1,0 +1,22 @@
+additional checks, rep_05_15, reference model: direct solver on the 2 mm mesh
+reported route: search winner, which is also the reference winner
+A. seed winners (reported route: J_ref = 8.7765e-04)
+   seed  5: J_search 8.3028e-04,  5931 analyses, among the re-evaluated candidates, J_ref 8.7765e-04 (x1.000 the reported route)
+   seed  7: J_search 9.2503e-04,  9098 analyses, among the re-evaluated candidates, J_ref 9.5926e-04 (x1.093 the reported route)
+   seed 11: J_search 1.0703e-03,  9238 analyses, NOT among the re-evaluated candidates, J_ref 1.1030e-03 (x1.257 the reported route)
+   seed 13: J_search 1.3522e-03,  4186 analyses, NOT among the re-evaluated candidates, J_ref 1.3329e-03 (x1.519 the reported route)
+   seed  3: J_search 3.2600e-03,  4998 analyses, NOT among the re-evaluated candidates, J_ref 3.3745e-03 (x3.845 the reported route)
+B. random controls (the five ACO runs together: 33451 analyses)
+   control of seed  3:  4998 analyses, J_search 7.9196e-03, J_ref 8.2168e-03; seeds with a lower J_ref: 5 of 5; ratio control/seed: min 2.43, median 7.45, max 9.36
+   control of seed  5:  5931 analyses, J_search 5.0010e-03, J_ref 4.5898e-03; seeds with a lower J_ref: 5 of 5; ratio control/seed: min 1.36, median 4.16, max 5.23
+   control of seed  7:  9098 analyses, J_search 4.2440e-03, J_ref 4.2149e-03; seeds with a lower J_ref: 5 of 5; ratio control/seed: min 1.25, median 3.82, max 4.80
+   control of seed 11:  9238 analyses, J_search 6.1213e-03, J_ref 6.0689e-03; seeds with a lower J_ref: 5 of 5; ratio control/seed: min 1.80, median 5.50, max 6.91
+   control of seed 13:  4186 analyses, J_search 5.9650e-03, J_ref 5.7523e-03; seeds with a lower J_ref: 5 of 5; ratio control/seed: min 1.70, median 5.22, max 6.55
+C. frequency quadrature, relative to the fine uniform grid (step 0.031 Hz); points: {'adaptive': 328, 'dense': 904, 'dense2': 5127, 'uniform05': 2001, 'uniform_fine': 31832}
+   reported route: adaptive +3.60%, dense +0.54%, dense2 +0.01%, uniform05 -0.04%
+   best control (seed 7): adaptive +8.56%, dense +1.18%, dense2 +0.02%, uniform05 -3.28%
+   ratio control/reported: adaptive 4.803, converged 4.583
+D. centreline clearances of the reported route (pipe outer radius 1.575 mm; free run excludes 20 mm at each terminal)
+   domain: minimum -2.84 mm at s = 245.1 mm (at A +0.00, at B +0.00); free run -2.84 mm at s = 245.1 mm, pipe surface -4.41 mm
+E. geometric margins of the reported route (sampling of rerank_campaign.py)
+   domain_centreline_min_mm -2.84, domain_excursion_mm +2.84, domain_tolerance_mm +10.71, self_clearance_surface_mm +19.80, length_mm +812.80, min_bend_radius_mm +12.47, straight_A_mm +1.19, straight_B_mm +2.27

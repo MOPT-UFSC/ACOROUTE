@@ -1,0 +1,182 @@
+{
+ "case": "stair_6_10",
+ "h_ref_mm": 2.0,
+ "reported_route": "search winner, which is also the reference winner",
+ "reported_path_ids": [
+  0,
+  23,
+  310,
+  575,
+  862,
+  1127,
+  1414,
+  1700,
+  1985,
+  2248,
+  2489,
+  2747,
+  2977,
+  3208,
+  3440,
+  3682,
+  3925,
+  4190,
+  4455,
+  4720,
+  5007,
+  5030,
+  5317,
+  5340,
+  5363,
+  5650,
+  5937,
+  5960,
+  5719,
+  5477,
+  5234,
+  4969,
+  4682,
+  4417,
+  4130,
+  3844,
+  3559,
+  3278,
+  3006,
+  2986,
+  2714,
+  2454,
+  2213,
+  2236,
+  2523,
+  2781,
+  3013,
+  3244,
+  3479,
+  3722,
+  3987,
+  4274,
+  4560,
+  4845,
+  5131,
+  5416,
+  5702,
+  5989,
+  6012,
+  6035
+ ],
+ "seeds": [
+  {
+   "seed": 5,
+   "J_search": 14.55576117713284,
+   "n_fem": 8880,
+   "in_top": true,
+   "J_ref": 13.85292
+  },
+  {
+   "seed": 11,
+   "J_search": 15.185795808492882,
+   "n_fem": 7029,
+   "in_top": true,
+   "J_ref": 14.62631
+  },
+  {
+   "seed": 3,
+   "J_search": 15.873052456562437,
+   "n_fem": 7071,
+   "in_top": false,
+   "J_ref": 14.896123166957546
+  },
+  {
+   "seed": 7,
+   "J_search": 17.937168694193584,
+   "n_fem": 9659,
+   "in_top": false,
+   "J_ref": 17.182311681479327
+  },
+  {
+   "seed": 13,
+   "J_search": 17.978380315949952,
+   "n_fem": 7370,
+   "in_top": false,
+   "J_ref": 17.368516735119442
+  }
+ ],
+ "J_ref_reported": 13.85292,
+ "controls": [
+  {
+   "seed": 5,
+   "n_fem": 8880,
+   "J_search": 26.98096,
+   "J_ref": 24.84196600686836
+  }
+ ],
+ "quadrature_reported": {
+  "adaptive": 13.852916927730778,
+  "dense": 13.849659341659576,
+  "dense2": 13.850236202000687,
+  "uniform05": 13.850225098883909,
+  "uniform_fine": 13.850225098883909
+ },
+ "quadrature_points": {
+  "adaptive": 713,
+  "dense": 2033,
+  "dense2": 11552,
+  "uniform05": 8001,
+  "uniform_fine": 8001
+ },
+ "uniform_fine_step_hz": [
+  0.5
+ ],
+ "quadrature_control": {
+  "adaptive": 24.84196600686836,
+  "dense": 24.83817318162282,
+  "dense2": 24.83910148226409,
+  "uniform05": 24.8391446992157,
+  "uniform_fine": 24.8391446992157
+ },
+ "quadrature_control_seed": 5,
+ "clearances": {
+  "outer_radius_mm": 1.575,
+  "length_mm": 1257.1988818071572,
+  "cut_end_mm": 20.0,
+  "domain": {
+   "min_mm": -1.8209210524323394,
+   "at_s_mm": 643.112347591534,
+   "at_A_mm": 0.0,
+   "at_B_mm": 0.0,
+   "free_run_min_mm": -1.8209210524323394,
+   "free_run_at_s_mm": 643.112347591534,
+   "free_run_surface_mm": -3.3959210524323393
+  },
+  "keepout_1": {
+   "min_mm": 4.976102903051144,
+   "at_s_mm": 134.72490665731138,
+   "at_A_mm": 88.63636363636363,
+   "at_B_mm": 236.38548850035977,
+   "free_run_min_mm": 4.976102903051144,
+   "free_run_at_s_mm": 134.72490665731138,
+   "free_run_surface_mm": 3.401102903051144
+  },
+  "keepout_2": {
+   "min_mm": 10.004010535345648,
+   "at_s_mm": 937.8641235199926,
+   "at_A_mm": 236.38548850035977,
+   "at_B_mm": 88.63636363636365,
+   "free_run_min_mm": 10.004010535345648,
+   "free_run_at_s_mm": 937.8641235199926,
+   "free_run_surface_mm": 8.429010535345649
+  }
+ },
+ "margins": {
+  "domain_centreline_min_mm": -1.8207586232604211,
+  "domain_excursion_mm": 1.8207586232604211,
+  "domain_tolerance_mm": 6.8181818181818175,
+  "keepout_1_surface_mm": 3.4012738990812847,
+  "keepout_2_surface_mm": 8.429004863201957,
+  "self_clearance_surface_mm": 20.82175249733445,
+  "length_mm": 1257.1945074421296,
+  "min_bend_radius_mm": 13.05158191341595,
+  "straight_A_mm": 0.6954208059303191,
+  "straight_B_mm": 0.922554622366345
+ }
+}
