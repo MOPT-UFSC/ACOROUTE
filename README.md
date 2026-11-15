@@ -10,7 +10,7 @@ This repository implements the research code associated with the manuscript:
 
 > **Ant colony optimization of small-bore pipe routes for reduced active input power**
 > Olavo M. Silva, Eduardo L. Cardoso, Miguel M. Neves, and Arcanjo Lenzi.
-> Submitted to the *Journal of Sound and Vibration*.
+> Submitted to *Results in Engineering*.
 
 The method constructs routes on a three-dimensional lattice, converts each completed route into a smoothing B-spline with pinned endpoints and end tangents, checks the admissibility conditions (developed length, minimum bend radius, containment, keep-out and, when active, self-clearance), meshes the centreline with 3D Timoshenko beam elements, and minimizes the active input power integrated over one or more frequency bands. The three filters that act during the construction (turn angle, length lower bound, keep-out) are described in the paper as admissibility filters; the complete checks are applied to the fitted spline.
 
@@ -30,6 +30,9 @@ The objective is non-additive and is available only after a complete geometric a
 | Run the non-convex staircase example | [`run_staircase.py`](run_staircase.py) |
 | Run the spherical domain with keep-out and end cones | [`run_sphere.py`](run_sphere.py) |
 | Run the multi-start seeds of any case in parallel | [`run_campaign.py`](run_campaign.py) |
+| Rerun all campaigns, random controls and re-evaluations of the revised manuscript | [`run_revision.py`](run_revision.py) |
+| Check seed winners, random controls, frequency quadrature and clearances of a campaign | [`revision_checks.py`](revision_checks.py) |
+| Reproduce the verification of the beam model against Ansys BEAM188 | [`ansys_validation/`](ansys_validation/README.md) |
 | Match code names to paper symbols | [`docs/CODE_TO_PAPER.md`](docs/CODE_TO_PAPER.md) |
 | Understand and tune every ACO parameter | [`docs/ACO_PARAMETERS.md`](docs/ACO_PARAMETERS.md) |
 

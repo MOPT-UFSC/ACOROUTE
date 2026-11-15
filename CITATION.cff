@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
 type: software
 title: "ACOROUTE: Ant colony optimization of small-bore pipe routes for reduced active input power"
-version: 0.2.1
+version: 0.2.2
 date-released: 2026-11-15
 license: MIT
 repository-code: "https://github.com/MOPT-UFSC/ACOROUTE"
@@ -19,7 +19,7 @@ authors:
 preferred-citation:
   type: article
   title: "Ant colony optimization of small-bore pipe routes for reduced active input power"
-  journal: "Journal of Sound and Vibration"
+  journal: "Results in Engineering"
   year: 2026
   notes: "Submitted; update with volume, pages and DOI after acceptance."
   authors:
